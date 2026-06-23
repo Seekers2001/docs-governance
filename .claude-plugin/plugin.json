@@ -1,0 +1,17 @@
+{
+  "name": "docs-governance",
+  "version": "0.2.0",
+  "description": "文档驱动开发插件：(1) 活文档治理——四件套（宪法/地图/健康仪表盘/流水账）+ 进会话读序，防文档随代码漂移；(2) 契约式前后端协作——主任独家维护数据接口契约 CONTRACT.md，前后端各自照契约开发并集成对账，防字段漂移。",
+  "author": {
+    "name": "Seekers2001",
+    "email": "jiaxinleifm@outlook.com"
+  },
+  "keywords": [
+    "documentation",
+    "governance",
+    "living-docs",
+    "contract-first",
+    "frontend-backend",
+    "context-engineering"
+  ]
+}

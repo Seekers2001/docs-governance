@@ -1,0 +1,14 @@
+{
+  "name": "docs-governance",
+  "owner": {
+    "name": "Seekers2001",
+    "email": "jiaxinleifm@outlook.com"
+  },
+  "plugins": [
+    {
+      "name": "docs-governance",
+      "source": "./",
+      "description": "文档驱动开发插件：活文档四件套（宪法/地图/健康仪表盘/流水账）+ 进会话读序 + 阶段收尾同步，契约式前后端协作（CONTRACT.md 分两层防字段漂移），Stop hook 防文档腐烂。"
+    }
+  ]
+}

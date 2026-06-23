@@ -1,0 +1,14 @@
+# macOS
+.DS_Store
+
+# Python（脚本 venv / 缓存）
+.venv/
+__pycache__/
+*.pyc
+
+# Node（若 fixture 用到）
+node_modules/
+
+# 本地环境
+.env
+*.local

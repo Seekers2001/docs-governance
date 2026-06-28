@@ -5,3 +5,4 @@
 ## [2026-06-23] audit | verify.sh 首跑全绿：JSON 合法 / hook 可执行 / 命令→agent→skill/template/reference 无断链
 ## [2026-06-24] feat | 借鉴 @vincemask《.claude/ 组织指南》补 4 处：skill 加「渐进式采用路径（带下一级预警信号）」+「团队 vs 个人分层」；README 加「治理常见错误」表；docs-auditor 扩到也审 .claude/ 配置目录本身（死配置/CLAUDE.md过载/模糊命名/个人混团队）
 ## [2026-06-24] audit | audit-blog 真项目治理审计跑通（可信度低，揪出 STATUS 自相矛盾/旧快照、MAP 导航6→7、README 描述已删架构等 ~14 条）——第 4 个 dogfood
+## [2026-06-28] feat | 新增 skill `loop-design-check`：把任务写成目标导向 loop（该不该建→可判定目标→回路类型→plan/build/judge 骨架）+ 体检 loop（五个崩法防呆+判断留人红线），防空转/作弊/跑飞。源自 vault《控制论×Loop×Goal》；机制层引用 ECC autonomous-loops/continuous-agent-loop 不重写

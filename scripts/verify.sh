@@ -18,20 +18,22 @@ echo "[2] hook 脚本可执行"
 shopt -s nullglob
 for h in hooks/*.sh; do [ -x "$h" ] && ok "$h" || bad "$h 不可执行（chmod +x）"; done
 
-echo "[3] 命令引用的 agent 存在"
-for c in commands/*.md; do
-  while IFS= read -r a; do
-    [ -z "$a" ] && continue
-    [ -f "agents/$a.md" ] && ok "$(basename "$c") → agents/$a.md" || bad "$(basename "$c") → agents/$a.md 缺"
-  done < <(grep -oE "contract-director|frontend-dev|backend-dev|docs-governor|docs-auditor" "$c" | sort -u)
+echo "[3] 每个 agent / skill 都有人引用或登记（动态，防"加了不登记"）"
+for a in agents/*.md; do
+  name=$(basename "$a" .md)
+  grep -rql "$name" commands/ skills/ README.md 2>/dev/null && ok "agents/$name 被引用" || bad "agents/$name 是孤儿（无 command/skill/README 引用）"
+done
+for d in skills/*/; do
+  name=$(basename "$d")
+  grep -rql "$name" commands/ agents/ README.md 使用说明.md 2>/dev/null && ok "skills/$name 已登记" || bad "skills/$name 未登记（README/使用说明/命令都没提它）"
 done
 
 echo "[4] 路径式引用（templates/ references/ skills/）存在"
-grep -rhoE "(templates|references)/[A-Za-z0-9._-]+\.md|skills/[A-Za-z0-9._-]+/SKILL\.md" agents/ skills/ commands/ 2>/dev/null | sort -u | while read -r ref; do
+grep -rhoE "(templates|references)/[A-Za-z0-9._-]+\.md|skills/[A-Za-z0-9._-]+/SKILL\.md" agents/ skills/ commands/ README.md 使用说明.md CLAUDE_MAP.md 2>/dev/null | sort -u | while read -r ref; do
   [ -f "$ref" ] && ok "$ref" || bad "$ref 被引用但不存在"
 done
 # 子 shell 里的 FAIL 不外传，单独复核第 4 项
-MISS=$(grep -rhoE "(templates|references)/[A-Za-z0-9._-]+\.md" agents/ skills/ commands/ 2>/dev/null | sort -u | while read -r ref; do [ -f "$ref" ] || echo "$ref"; done)
+MISS=$(grep -rhoE "(templates|references)/[A-Za-z0-9._-]+\.md|skills/[A-Za-z0-9._-]+/SKILL\.md" agents/ skills/ commands/ README.md 使用说明.md CLAUDE_MAP.md 2>/dev/null | sort -u | while read -r ref; do [ -f "$ref" ] || echo "$ref"; done)
 [ -n "$MISS" ] && FAIL=1
 
 echo "[5] 每个 skill 有 SKILL.md / 每个 command 与 agent 是 .md"

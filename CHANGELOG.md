@@ -2,6 +2,12 @@
 
 本插件的版本变更记录。格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/)。
 
+## [0.3.0] - 2026-07-02
+
+### 新增
+- `/governance-init` 命令 + `templates/governance.example.md`：全新空项目的 day-0 治理骨架——精简 CLAUDE.md（含 Git 自动执行+硬禁单 / 失败自检三问 / references 触发规则）+ docs/governance.md（4 步检查流程 + 三层验收）+ PROJECT_LOG.md + 目录骨架。刻意不生成 MAP/STATUS（防空壳占位符出生即漂移），项目长起来后用 `/governance` 升级；与 `/governance` 双向指路。
+- `loop-design-check` skill：写 loop（该不该建 → 可判定目标 → 回路类型 → plan/build/judge 骨架）+ 体检 loop（五个崩法防呆 + 判断留人红线）。英文版已被 ECC 上游合并（affaan-m/ECC #2381）。
+
 ## [0.2.0] - 2026-06-23
 
 ### 新增

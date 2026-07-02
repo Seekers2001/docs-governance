@@ -36,7 +36,11 @@ argument-hint: "[项目名 技术栈 模块划分]"
 
 `src/ tests/ docs/ references/ logs/ output/`（目录名按技术栈惯例调整；`output/` 与 `logs/` 提醒用户加进 .gitignore）。
 
-### 5. git init + 首提
+### 5. pre-commit 护栏
+
+把插件 `templates/pre-commit.example` 的内容写入 `.git/hooks/pre-commit` 并 `chmod +x`（安装形态不同找不到模板文件时，按其要点生成：代码改动必须同批 staged 一行 PROJECT_LOG；测试/文档/治理文件豁免；拦截时给可复制的补账命令）。
+
+### 6. git init + 首提
 
 `git init` → 只 add 刚生成的具体文件 → `git commit -m "init: project governance scaffold"`。不 push。
 

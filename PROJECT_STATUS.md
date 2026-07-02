@@ -14,7 +14,7 @@
 ## 📥 Backlog（方法论优化，2026-07-02 小磊逐条批准；等 dogfood 撞到或排期再做，不抢跑）
 
 1. **审计事实层下沉成脚本**：`health.sh` 查路径存在/标称行数 vs 实测/LOG 改历史，退出码终审；LLM 只留语义层（矛盾/越界），判断留人。STATUS 可量化指标改为脚本自动生成。
-2. **commit 前固化核对**（pre-commit hook，方案已定）：staged 含代码改动 → PROJECT_LOG.md 必须同批 staged；豁免=只改 tests//docs//治理文件 或 --no-verify；做成 templates/pre-commit.example，/governance-init 自动装。只拦这一条最小可判定不变量，MAP/STATUS 不在 commit 关口硬卡（防狼来了）。
+2. ✅ **commit 前固化核对**（2026-07-02 已做：templates/pre-commit.example + 两命令接入 + 四段测试）：staged 含代码改动 → PROJECT_LOG.md 必须同批 staged；豁免=只改 tests//docs//治理文件 或 --no-verify；做成 templates/pre-commit.example，/governance-init 自动装。只拦这一条最小可判定不变量，MAP/STATUS 不在 commit 关口硬卡（防狼来了）。
 3. **LOG 消费端**：audit 增加 fix 热点统计（grep fix 按模块聚合），流水账变复盘数据源。
 4. **四件套并发约定**：LOG append-only 各写各行；STATUS/MAP 指定"谁拥有谁改"（同契约线"谁改契约谁是主任"）。
 5. **文档复利三动作**（skill 加一节"文档作为再生产资料"）：① 跑通即存 references/ ② LOG fix 热点 ≥2 次的坑升级成 CLAUDE.md 硬规则 ③ ≥2 项目重复的 spec/references/placeholder 回流模板母版。

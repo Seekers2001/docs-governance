@@ -82,6 +82,7 @@ AI 让代码变得**便宜、可丢弃、可再生**。当写代码不再是瓶�
 /governance              # 已有代码项目：扫项目，生成/更新四件套
 /governance-audit        # 只读审计：哪儿漂移了，不动文件
 /governance-sync         # 阶段收尾：按矩阵查漏补缺该同步哪份文档
+/governance-retro        # 复盘 LOG：哪类错误重复最多 → 输出"该下沉成 lint/测试"候选清单
 
 # 契约式前后端协作
 /contract 做订单详情页    # 先判模式，再定契约 → 各端开发 → 集成对账
@@ -99,7 +100,7 @@ docs-governance/
 ├── .claude-plugin/{plugin,marketplace}.json
 ├── skills/{living-docs-governance,contract-first,module-regression,loop-design-check}/SKILL.md         # 方法论唯一源
 ├── agents/{docs-governor,docs-auditor,contract-director,frontend-dev,backend-dev,regression-auditor}.md
-├── commands/{governance-init,governance,governance-audit,governance-sync,contract,regression-audit}.md
+├── commands/{governance-init,governance,governance-audit,governance-sync,governance-retro,contract,regression-audit}.md
 ├── templates/*.example.md                                          # 给用户项目套的空白模板
 ├── references/governance-sync-matrix.md
 ├── hooks/{check-on-stop.sh,hooks.json}                             # 会话结束治理提醒

@@ -18,6 +18,10 @@ grep -rE "^(from|import) " src/ | 按模块聚合；Node 项目扫 require/impor
 下游（谁依赖我）：05-汇总
 回归验收命令：`pytest tests/test_02.py && python scripts/reconcile.py --module 02`   <!-- 对账型，优先 -->
 联动规则：改我 → 必跑 05
+判定点清单：
+- 订单号 NaN/"nan" 一律视为空，回退到备用键 → tests/test_02.py::test_nan_order_key ✅
+- 金额列文本数字强转 numeric               → tests/test_02.py::test_to_num ✅
+- 商品ID 19 位不截断                        → ⚠️ 只写在 CLAUDE.md 靠人记，无执法命令 ← 侥幸，待下沉
 
 ## 模块 04-临时工具
 下游（谁依赖我）：（无）

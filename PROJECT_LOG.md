@@ -10,3 +10,4 @@
 ## [2026-07-02] fix | verify.sh 修两伤：skills 断链漏检（MISS 正则 + 扫描范围扩到 README/使用说明/CLAUDE_MAP，三段测试证伪→证真）+ agent 白名单硬编码改动态"孤儿/未登记"检查；README 补市场安装命令+验收命令+真实审计样例；发布 v0.3.0
 ## [2026-07-02] governance | 方法论优化 backlog 五条立项（审计脚本化/pre-commit 固化/LOG 消费端/并发约定/文档复利三动作），方案细节见 STATUS Backlog
 ## [2026-07-02] feat | backlog #2 落地：templates/pre-commit.example 护栏（代码改动必须同批一行流水账；测试/文档豁免；--no-verify 后门）+ /governance-init 自动装 + /governance 询问装；临时仓四段测试全过（拦/带账过/豁免过/后门过）
+## [2026-07-03] feat | 第三条线·模块回归审计首版：module-regression skill（台账三要素/审计五步/三铁律）+ regression-auditor agent（只跑只报不修）+ /regression-audit 命令（init 建台账草稿）+ REGRESSION.example 模板；plugin 0.4.0；未真项目实测，待经营报表试点

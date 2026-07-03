@@ -25,6 +25,8 @@ AI 让代码变得**便宜、可丢弃、可再生**。当写代码不再是瓶�
 
 另配一条**契约式前后端协作**线（`contract-first`）：一份 `CONTRACT.md` 当前后端唯一真相源，防字段漂移导致集成白屏——本质是轻量的**消费者驱动契约（CDC）/ 契约测试**，支持单会话多 agent 和多终端异步两种模式。
 
+第三条线是**模块回归审计**（`module-regression`）：一份 `REGRESSION.md` 台账登记每个模块的下游消费者（脚本生成）和可执行的回归验收命令，改完照单跑"本模块+全部下游"，退出码终审——防大项目里"改一个模块悄悄弄坏其他模块"。
+
 ## 治理常见错误（dogfood 里反复撞到的）
 
 | 错误 | 正确做法 |
@@ -83,6 +85,10 @@ AI 让代码变得**便宜、可丢弃、可再生**。当写代码不再是瓶�
 
 # 契约式前后端协作
 /contract 做订单详情页    # 先判模式，再定契约 → 各端开发 → 集成对账
+
+# 模块回归审计（防"改 A 坏 B"）
+/regression-audit init   # 首跑：扫 import 生成回归台账 REGRESSION.md 草稿
+/regression-audit        # 改完就跑：本模块+全部下游验收命令，退出码终审
 ```
 
 ## 结构
@@ -91,9 +97,9 @@ AI 让代码变得**便宜、可丢弃、可再生**。当写代码不再是瓶�
 docs-governance/
 ├── CLAUDE.md / CLAUDE_MAP.md / PROJECT_STATUS.md / PROJECT_LOG.md  # 插件自治理（dogfood）
 ├── .claude-plugin/{plugin,marketplace}.json
-├── skills/{living-docs-governance,contract-first,loop-design-check}/SKILL.md         # 方法论唯一源
-├── agents/{docs-governor,docs-auditor,contract-director,frontend-dev,backend-dev}.md
-├── commands/{governance-init,governance,governance-audit,governance-sync,contract}.md
+├── skills/{living-docs-governance,contract-first,module-regression,loop-design-check}/SKILL.md         # 方法论唯一源
+├── agents/{docs-governor,docs-auditor,contract-director,frontend-dev,backend-dev,regression-auditor}.md
+├── commands/{governance-init,governance,governance-audit,governance-sync,contract,regression-audit}.md
 ├── templates/*.example.md                                          # 给用户项目套的空白模板
 ├── references/governance-sync-matrix.md
 ├── hooks/{check-on-stop.sh,hooks.json}                             # 会话结束治理提醒

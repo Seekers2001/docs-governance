@@ -2,7 +2,10 @@
 
 本插件的版本变更记录。格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/)。
 
-## [未发布]
+## [0.4.0] - 2026-07-03
+
+### 新增
+- **第三条线·模块回归审计**（`module-regression` skill + `regression-auditor` agent + `/regression-audit` 命令 + `templates/REGRESSION.example.md`）：REGRESSION.md 台账登记每个模块的下游消费者（脚本从 import 生成、勿手改）与可执行回归验收命令（对账型优先），改完照单跑"本模块+全部下游"，退出码终审——防大项目"改一个模块悄悄弄坏其他模块"。铁律：判决=退出码 / 审计员只报不修 / 红着不准交付。
 
 ### 新增
 - `templates/pre-commit.example`：pre-commit 护栏——固化"含代码改动的 commit 必须同批 staged 一行 PROJECT_LOG.md"（测试/文档/治理文件豁免，`--no-verify` 应急后门）；`/governance-init` 自动装，`/governance` 对已有 git 项目询问安装。（backlog #2）

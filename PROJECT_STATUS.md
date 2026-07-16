@@ -9,6 +9,7 @@
 
 ### 未决 P0
 - `/governance-init` 尚未在真实空项目上端到端首跑（2026-07-02 新增命令，逻辑齐但没实测）。
+- `test-collaboration` v1 已实现，但尚未在真实项目完成首次测试资产盘点与 Bug→TEST-ID 试点（首选：经营报表加工系统）。
 - `loop-design-check` skill 与两条主线主题不合（小磊已确认"没关系"），挪出待拍板。
 
 ## 📥 Backlog（方法论优化，2026-07-02 小磊逐条批准；等 dogfood 撞到或排期再做，不抢跑）
@@ -18,6 +19,8 @@
 3. **LOG 消费端**：audit 增加 fix 热点统计（grep fix 按模块聚合），流水账变复盘数据源。
 4. **四件套并发约定**：LOG append-only 各写各行；STATUS/MAP 指定"谁拥有谁改"（同契约线"谁改契约谁是主任"）。
 5. **文档复利三动作**（skill 加一节"文档作为再生产资料"）：① 跑通即存 references/ ② LOG fix 热点 ≥2 次的坑升级成 CLAUDE.md 硬规则 ③ ≥2 项目重复的 spec/references/placeholder 回流模板母版。
+6. ✅ **模块回归审计**（2026-07-03 首版：module-regression skill + regression-auditor agent + /regression-audit 命令 + REGRESSION.example 模板；⚠️ 未在真项目实测，首选试点=经营报表）
+7. ✅ **测试协作治理 v1**（2026-07-12：test-collaboration skill + TESTS.example 模板；判定点职责从 REGRESSION.md 迁为 TEST-ID 引用；不新增 agent/command/脚本；⚠️ 待真实项目试点）
 
 ## 指标（按需读）
 

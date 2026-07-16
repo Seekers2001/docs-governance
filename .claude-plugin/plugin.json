@@ -1,7 +1,7 @@
 {
   "name": "docs-governance",
-  "version": "0.3.0",
-  "description": "文档驱动开发插件：(1) 活文档治理——四件套（宪法/地图/健康仪表盘/流水账）+ 进会话读序，防文档随代码漂移；(2) 契约式前后端协作——主任独家维护数据接口契约 CONTRACT.md，前后端各自照契约开发并集成对账，防字段漂移。",
+  "version": "0.5.0",
+  "description": "文档驱动开发插件：(1) 活文档治理防文档漂移；(2) 契约式协作防接口漂移；(3) TESTS.md 管理测试资产、必要测试点与 Bug 回归保护；(4) REGRESSION.md 管理模块下游与回归命令。",
   "author": {
     "name": "Seekers2001",
     "email": "jiaxinleifm@outlook.com"
@@ -12,6 +12,8 @@
     "living-docs",
     "contract-first",
     "frontend-backend",
+    "testing",
+    "test-governance",
     "context-engineering"
   ]
 }

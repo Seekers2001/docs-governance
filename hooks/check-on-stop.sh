@@ -12,19 +12,37 @@ for f in "${quad[@]}"; do [ -f "$f" ] && present+=("$f"); done
 
 warned=0
 
-# 检查1：相对时间残留（LOG/STATUS 重灾区，必须绝对日期）
-rot=$(grep -nE "今天|昨天|刚刚|最近|上周|本周|recently|yesterday" "${present[@]}" 2>/dev/null || true)
-if [ -n "$rot" ]; then
-  echo "⚠️ docs-governance: 四件套里有相对时间，应改绝对日期（如 $(date +%Y-%m-%d)）：" >&2
-  echo "$rot" >&2
-  warned=1
+today=$(date +%Y-%m-%d)
+
+# 检查1：相对时间残留（只查记录事实的 LOG/STATUS；CLAUDE.md / MAP 是结构文档，
+# 章节标题叫"最近审计"、导航行写"最近发生什么→看 LOG"都是正当的，不算腐烂）
+targets=()
+for f in PROJECT_LOG.md PROJECT_STATUS.md; do [ -f "$f" ] && targets+=("$f"); done
+if [ ${#targets[@]} -gt 0 ]; then
+  # 只查"记录事实"的正文行，排除四类结构性文本（它们里出现相对时间是正当的）：
+  #   1. 标题行 —— 章节叫"最近审计"合理，不该改成"2026-07-13 审计"
+  #   2. 代码块 —— 路径占位符如 <今天> 是示例，不是事实
+  #   3. 表格行 —— 图例/指标/维护规则表，如"| 最近审计 | 每次跑完追加一行 |"是在讲怎么维护
+  #   4. 导航行 —— 如"想知道最近发生什么 → 看 PROJECT_LOG.md"是指路，不是记事
+  rot=$(awk '
+    /^```/ { in_code = !in_code; next }
+    in_code { next }
+    /^[[:space:]]*#/ { next }
+    /^[[:space:]]*\|/ { next }
+    /PROJECT_LOG\.md|PROJECT_STATUS\.md|CLAUDE_MAP\.md/ { next }
+    /今天|昨天|刚刚|最近|上周|本周|recently|yesterday/ { print FILENAME ":" FNR ":" $0 }
+  ' "${targets[@]}" 2>/dev/null || true)
+  if [ -n "$rot" ]; then
+    echo "⚠️ docs-governance: LOG/STATUS 里有相对时间，应改绝对日期（如 ${today}）：" >&2
+    echo "$rot" >&2
+    warned=1
+  fi
 fi
 
 # 检查2：PROJECT_LOG 今天有没有追加（本会话有进展就该补一行）
 if [ -f PROJECT_LOG.md ]; then
-  today=$(date +%Y-%m-%d)
-  if ! grep -q "$today" PROJECT_LOG.md 2>/dev/null; then
-    echo "⚠️ docs-governance: PROJECT_LOG.md 今天（$today）还没有条目，这次会话有进展记得追加一行 [日期] 类型 | 摘要。" >&2
+  if ! grep -q "${today}" PROJECT_LOG.md 2>/dev/null; then
+    echo "⚠️ docs-governance: PROJECT_LOG.md 今天（${today}）还没有条目，这次会话有进展记得追加一行 [日期] 类型 | 摘要。" >&2
     warned=1
   fi
 fi

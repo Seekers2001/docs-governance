@@ -2,6 +2,15 @@
 
 本插件的版本变更记录。格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/)。
 
+## [0.5.0] - 2026-07-12
+
+### 新增
+- **第四条线·测试协作治理**（`test-collaboration` skill + `templates/TESTS.example.md`）：盘点项目现有测试资产，把需求、规则、风险和 Bug 转成 TEST-ID，维护必要、缺失、疑似重复、疑似废弃及可执行证据。v1 由当前会话直接使用 skill，不新增专用 agent、slash command 或执法脚本。
+
+### 变更
+- `module-regression` 和 `REGRESSION.example.md` 不再重复维护业务规则清单，改为引用 `TESTS.md` 的 TEST-ID；`/regression-audit` 继续只负责按台账运行本模块和下游命令并报告退出码。
+- `/governance-retro` 的重复错误下沉候选改为登记到 `TESTS.md`。
+
 ## [0.4.0] - 2026-07-03
 
 ### 新增

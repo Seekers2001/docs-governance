@@ -8,7 +8,7 @@
     {
       "name": "docs-governance",
       "source": "./",
-      "description": "文档驱动开发插件：活文档四件套防文档腐烂 + 契约式前后端协作防字段漂移 + 模块回归审计防改A坏B（REGRESSION.md 台账 + 退出码终审），Stop hook 防文档腐烂。"
+      "description": "文档驱动开发插件：活文档防腐烂 + 契约式协作防字段漂移 + TESTS.md 管理测试资产和 Bug 回归保护 + REGRESSION.md 管理模块联动回归。"
     }
   ]
 }

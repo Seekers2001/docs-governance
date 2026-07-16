@@ -8,6 +8,8 @@
 command → agent → skill（方法论唯一源）
                 → templates/（给用户项目套的空白模板）
                 → references/（收尾同步矩阵）
+
+自然语言触发 → test-collaboration skill → templates/TESTS.example.md
 ```
 
 - 改**方法论** → 只动 `skills/*/SKILL.md`，agent / command 自动继承（它们只指向、不复制）
@@ -20,6 +22,9 @@ command → agent → skill（方法论唯一源）
 |---|---|
 | 活文档方法论 | `skills/living-docs-governance/SKILL.md` |
 | 契约方法论（含两种模式） | `skills/contract-first/SKILL.md` |
+| 测试资产与必要测试点治理 | `skills/test-collaboration/SKILL.md` |
+| 模块联动回归方法论 | `skills/module-regression/SKILL.md` |
+| TESTS.md 空白模板 | `templates/TESTS.example.md` |
 | 收尾同步矩阵 | `references/governance-sync-matrix.md` |
 | 结构完整性自检 | `scripts/verify.sh` |
 

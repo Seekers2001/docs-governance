@@ -1,6 +1,7 @@
 ---
 name: living-docs-governance
-description: 把长期项目的文档当成一个小系统来维护，防止文档腐烂——四份各司其职的治理文件（CLAUDE.md 宪法 / CLAUDE_MAP.md 地图 / PROJECT_STATUS.md 健康仪表盘 / PROJECT_LOG.md 流水账）+ 固定的进会话读序。只要项目长过几个模块、文档开始和代码对不上、AI 每次进会话都要重新摸索结构、新人接手找不到北、或 CLAUDE.md 越写越长，就用这个 skill，哪怕用户没明说"文档治理"。中文触发：文档治理、活文档、防文档漂移、项目状态追踪、项目地图、健康仪表盘、流水账、进会话读序、长期项目治理、新人接手项目、AI 老忘项目结构、CLAUDE.md 太长该拆。English triggers: living documentation, docs governance, prevent doc rot, project status dashboard, project map, append-only changelog, session read order.
+description: >-
+  把长期项目的文档当成一个小系统来维护，防止文档腐烂——四份各司其职的治理文件（CLAUDE.md 共享章程 / CLAUDE_MAP.md 地图 / PROJECT_STATUS.md 健康仪表盘 / PROJECT_LOG.md 流水账）+ Codex 的 AGENTS.md 入口桥接 + 固定的进会话读序。用于新建治理骨架、治理审计、阶段同步、LOG 复盘，以及项目文档漂移治理。中文触发：文档治理、活文档、防文档漂移、治理初始化、治理审计、治理同步、治理复盘、AGENTS.md、项目状态追踪、项目地图、健康仪表盘、流水账、长期项目治理。English triggers: living documentation, docs governance, governance init, governance audit, governance sync, governance retrospective, AGENTS.md bridge, prevent doc rot, project status dashboard, project map, append-only changelog.
 metadata:
   origin: ECC
 ---
@@ -11,7 +12,7 @@ metadata:
 
 这是**维护期**的实践。"我刚 clone 了一个陌生仓库"那种一次性问题，用代码库 onboarding 类技能。本技能负责的是：让 onboarding 出来的那张图，在几个月的改动之后**依然为真**。
 
-> 要让 agent 真去扫项目、生成/更新这四份文件，用配套的 `docs-governor` agent。本 skill 是方法论唯一来源，agent 照它执行。
+> 在 Claude Code 中，可由配套的 `docs-governor` / `docs-auditor` agent 执行；在 Codex 或没有这些自定义 agent 的宿主中，由当前 agent 直接按本 skill 执行，必要时再使用宿主提供的只读探索或执行型子 agent。本 skill 始终是方法论唯一来源。
 
 ## 什么时候启用
 
@@ -48,6 +49,20 @@ metadata:
 
 这套系统 = **四份文档**（角色严格分离）+ **分级读取协议** + 让它们保持最新的**更新规则** + 阶段收尾时的**查漏补缺矩阵**。
 
+### Claude Code / Codex 入口适配
+
+两端共用本 skill，不复制方法论：
+
+| 用户意图 | Claude Code 入口 | Codex / ChatGPT 入口 | 详细执行流程 |
+|---|---|---|---|
+| 空项目初始化 | `/governance-init` | `$living-docs-governance` + “初始化空项目治理” | `../../commands/governance-init.md` |
+| 已有项目治理 | `/governance` | `$living-docs-governance` + “治理当前项目” | `../../commands/governance.md` |
+| 只读审计 | `/governance-audit` | `$living-docs-governance` + “只读审计” | `../../commands/governance-audit.md` |
+| 阶段同步 | `/governance-sync` | `$living-docs-governance` + “阶段收尾同步” | `../../commands/governance-sync.md` |
+| LOG 复盘 | `/governance-retro` | `$living-docs-governance` + “复盘 PROJECT_LOG” | `../../commands/governance-retro.md` |
+
+Codex / ChatGPT 执行时，读取对应流程文件，忽略其中 Claude Code 专用的 frontmatter、`$ARGUMENTS` 语法和自定义 agent 调用；由当前 agent 承担同一职责并保留原有读写边界。只读审计、只读复盘不得因为宿主不同而变成写操作。
+
 ### 四份文档与各自的职责
 
 | 文档 | 唯一职责 | 该放什么 | 绝不能放什么 |
@@ -75,7 +90,7 @@ metadata:
 | `CLAUDE_MAP.md` | **默认不读**（它只记树里看不出来的：依赖方向 / 误导清单 / 别动区；目录树本身按需 `ls`） | 找不到东西、要跨模块改、**新建/删/重命名文件前**，读它 |
 | `PROJECT_LOG.md` | **不读**（transcript） | 排查 bug、追溯"为什么删 / 为什么这么做"时，`grep` 或读尾部 |
 
-如果项目使用 `AGENTS.md` 作为跨 Agent 入口，也只需放同一条路标：需要定位文件、理解非显然的目录职责或整体结构时，按需读取 `CLAUDE_MAP.md`。不要把 MAP 内容复制进 `AGENTS.md` 或 `CLAUDE.md`，也不要在入口文件里写死目录树。
+如果项目使用 Codex，按 `templates/AGENTS.example.md` 建一个薄桥接入口：让 Codex 先读共享章程 `CLAUDE.md` 和 STATUS 红线，并在结构性操作前按需读取 MAP。不要把章程或 MAP 内容复制进 `AGENTS.md`，也不要在入口文件里写死目录树。
 
 常驻成本压到最小：CLAUDE 全文 + STATUS 红线几行 + MAP 索引头。大头（完整 MAP、STATUS 指标、整本 LOG）全按需。前三类是 **projection**（决定此刻喂什么），LOG 是 **transcript**（记录发生了什么）。
 

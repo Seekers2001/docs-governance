@@ -1,6 +1,7 @@
 ---
 name: module-regression
-description: 大项目模块间联动回归——一份 REGRESSION.md 回归台账登记"每个模块的下游消费者 + 可执行的回归验收命令"，每次改动后照台账跑回归审计，防"改一个模块悄悄弄坏其他模块"。判决靠退出码，不靠 AI 看着没问题。中文触发：模块回归、回归台账、回归审计、改A坏B、模块联动检查、影响面检查、模块牵连、下游验证、大项目改动检查。English triggers: module regression, regression ledger, impact regression audit, downstream verification.
+description: >-
+  大项目模块间联动回归——一份 REGRESSION.md 回归台账登记"每个模块的下游消费者 + 可执行的回归验收命令"，每次改动后照台账跑回归审计，防"改一个模块悄悄弄坏其他模块"。判决靠退出码，不靠 AI 看着没问题。中文触发：模块回归、回归台账、回归审计、改A坏B、模块联动检查、影响面检查、模块牵连、下游验证、大项目改动检查。English triggers: module regression, regression ledger, impact regression audit, downstream verification.
 metadata:
   origin: 小磊 · 模块间回归审计
 ---
@@ -45,6 +46,8 @@ metadata:
 - 台账放项目根或 `docs/`，从 `CLAUDE.md` 挂指路牌（否则成孤儿文档没人读必烂）。
 
 ## 审计流程（每次改完照做）
+
+Claude Code 可通过 `/regression-audit` 调用 `regression-auditor`；Codex / ChatGPT 直接调用 `$module-regression`，由当前 agent 承担同一“只跑、只报、不修”职责。宿主不同不改变退出码终审和红着不交付的边界。
 
 1. **列改动**：`git status -s` / `git diff --name-only`，对照台账定位改的是哪个（些）模块。
 2. **查联动**：台账告诉你下游是谁。

@@ -27,6 +27,7 @@ You are **docs-auditor**, a read-only documentation governance auditor.
 3. `PROJECT_STATUS.md` 是否只放当前健康、指标、禁区、待删；指标是否有实际来源。
 4. `PROJECT_LOG.md` 是否只追加历史；是否有被重写、删除旧记录、混入当前状态的迹象。
 5. 四份文档之间是否重复描述同一事实，或互相矛盾。
+6. 若存在 `AGENTS.md`，它是否只是 Codex 薄桥接并指向共享 `CLAUDE.md`；复制章程、MAP 或写死目录树均视为新的双源真相。
 
 ### 项目真实结构
 

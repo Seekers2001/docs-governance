@@ -1,5 +1,5 @@
 ---
-description: 给全新（还没代码的）项目搭 day-0 治理骨架：精简 CLAUDE.md + docs/governance.md 检查流程 + PROJECT_LOG.md + 目录骨架，并 git init 首提。已有代码的项目请用 /governance。
+description: 给全新（还没代码的）项目搭 day-0 治理骨架：精简 CLAUDE.md + Codex 的 AGENTS.md 桥接 + docs/governance.md 检查流程 + PROJECT_LOG.md + 目录骨架，并 git init 首提。已有代码的项目请用 /governance。
 argument-hint: "[项目名 技术栈 模块划分]"
 ---
 
@@ -24,6 +24,10 @@ argument-hint: "[项目名 技术栈 模块划分]"
 - **失败自检（强制）**：操作失败不要直接重试，先答三问——缺信息？缺工具？缺约束？→ 告诉用户缺什么。
 - **文档结构指路**：`docs/{模块}-spec.md`（需求/验收标准）、`docs/{模块}-plan.md`（方案/已知坑）、`references/`（已验证参考实现）。**references/ 触发规则**：遇外部 API / 复杂转换 / 图像文件批处理等高不确定实现，先建 references/ 最小跑通版，再写正式代码；禁止从纯文字描述直接实现。
 
+### 1.5 `AGENTS.md`（Codex 薄桥接）
+
+若用户使用 Codex，或希望项目同时兼容 Claude Code 与 Codex，则从 `templates/AGENTS.example.md` 生成根目录 `AGENTS.md`。它只指向共享章程 `CLAUDE.md`、STATUS 红线和按需 MAP，不复制规则或目录树。
+
 ### 2. `docs/governance.md`
 
 **从 `templates/governance.example.md` 复制**，只替换 `{项目名称}`，placeholder 留给项目演化中填。不要内嵌改写模板正文。
@@ -42,7 +46,7 @@ argument-hint: "[项目名 技术栈 模块划分]"
 
 ### 6. git init + 首提
 
-`git init` → 只 add 刚生成的具体文件 → `git commit -m "init: project governance scaffold"`。不 push。
+`git init` → 只 add 刚生成的具体文件（包含已生成的 `AGENTS.md`）→ `git commit -m "init: project governance scaffold"`。不 push。
 
 ## 刻意不生成的（防出生即漂移）
 

@@ -1,0 +1,41 @@
+{
+  "name": "docs-governance",
+  "version": "0.6.0",
+  "description": "面向 Claude Code、Codex 与 ChatGPT 的文档驱动开发治理插件：治理活文档、跨端契约、测试资产与模块回归。",
+  "author": {
+    "name": "Seekers2001",
+    "email": "jiaxinleifm@outlook.com",
+    "url": "https://github.com/Seekers2001"
+  },
+  "homepage": "https://github.com/Seekers2001/docs-governance",
+  "repository": "https://github.com/Seekers2001/docs-governance",
+  "license": "MIT",
+  "keywords": [
+    "documentation",
+    "governance",
+    "living-docs",
+    "contract-first",
+    "testing",
+    "regression",
+    "codex"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Docs Governance",
+    "shortDescription": "防止项目文档、接口与回归证据漂移",
+    "longDescription": "用活文档、契约优先、测试资产台账与模块回归清单治理长期 AI 协作项目。",
+    "developerName": "Seekers2001",
+    "category": "Productivity",
+    "capabilities": [
+      "Read",
+      "Write"
+    ],
+    "websiteURL": "https://github.com/Seekers2001/docs-governance",
+    "defaultPrompt": [
+      "审计当前项目的治理文档是否已经漂移。",
+      "为当前项目建立轻量的活文档治理。",
+      "盘点测试资产并把缺口登记为 TEST-ID。"
+    ],
+    "brandColor": "#2F6B5F"
+  }
+}

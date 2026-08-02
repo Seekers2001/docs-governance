@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# docs-governance · Stop hook
+# docs-governance · Claude Code / Codex Stop hook
 # 会话结束时检查四件套是否在腐烂，只提醒不阻塞（exit 0）。
-# 想改成"强制 Claude 先修复再停"，把结尾的 exit 0 改成 exit 2。
+# 想改成"强制 agent 先修复再停"，把结尾的 exit 0 改成 exit 2。
 set -uo pipefail
 
 quad=(CLAUDE.md CLAUDE_MAP.md PROJECT_STATUS.md PROJECT_LOG.md)

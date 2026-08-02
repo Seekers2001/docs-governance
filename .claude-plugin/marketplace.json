@@ -8,7 +8,7 @@
     {
       "name": "docs-governance",
       "source": "./",
-      "description": "文档驱动开发插件：活文档防腐烂 + 契约式协作防字段漂移 + TESTS.md 管理测试资产和 Bug 回归保护 + REGRESSION.md 管理模块联动回归。"
+      "description": "兼容 Claude Code、Codex 与 ChatGPT 的文档驱动开发插件：活文档防腐烂 + 契约式协作 + 测试资产治理 + 模块联动回归。"
     }
   ]
 }

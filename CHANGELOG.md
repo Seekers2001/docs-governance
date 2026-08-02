@@ -2,6 +2,17 @@
 
 本插件的版本变更记录。格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/)。
 
+## [0.6.0] - 2026-08-02
+
+### 新增
+- 新增 `.codex-plugin/plugin.json`，将现有 skills 打包为 Codex / ChatGPT 可安装插件。
+- 新增根目录 `AGENTS.md` 与 `templates/AGENTS.example.md` 薄桥接，让 Codex 读取共享 `CLAUDE.md` 章程而不复制规则。
+
+### 变更
+- 活文档、契约协作与模块回归 skills 增加 Codex 直接执行和宿主 agent 降级说明。
+- README、使用说明与 day-0 初始化流程补充 Codex 安装、调用和 AGENTS 生成方式。
+- 结构自检增加 Claude / Codex manifest 名称、版本和 skills 路径一致性检查。
+
 ## [0.5.0] - 2026-07-12
 
 ### 新增

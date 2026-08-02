@@ -1,5 +1,5 @@
 ---
-description: 对当前项目做活文档治理——扫描真实结构，生成或增量更新四件套治理文档（CLAUDE.md / CLAUDE_MAP.md / PROJECT_STATUS.md / PROJECT_LOG.md），全中文。
+description: 对当前项目做活文档治理——扫描真实结构，生成或增量更新四件套治理文档（CLAUDE.md / CLAUDE_MAP.md / PROJECT_STATUS.md / PROJECT_LOG.md），并按需生成 Codex 的 AGENTS.md 薄桥接，全中文。
 ---
 
 调用 **docs-governor** 子 agent 对**当前工作目录的项目**做活文档治理。
@@ -17,5 +17,6 @@ description: 对当前项目做活文档治理——扫描真实结构，生成�
 2. 已存在的治理文件**增量更新**，不推翻重写；`PROJECT_LOG.md` 只追加。
 3. 严守四件套非重叠纪律：每个事实只写一处。
 4. 产物全部中文。
-5. 若项目是 git 仓且 `.git/hooks/pre-commit` 不存在：问用户要不要装 pre-commit 护栏（`templates/pre-commit.example`，固化"代码改动必须同批带一行流水账"）。
-6. 干完汇报：建/改了哪几份文件、关键内容、怎么验收。不要谎报"完成"。
+5. 项目使用 Codex、已有 `AGENTS.md` 或用户要求跨宿主兼容时：从 `templates/AGENTS.example.md` 生成或增量维护薄桥接，不复制 `CLAUDE.md` / MAP 内容。
+6. 若项目是 git 仓且 `.git/hooks/pre-commit` 不存在：问用户要不要装 pre-commit 护栏（`templates/pre-commit.example`，固化"代码改动必须同批带一行流水账"）。
+7. 干完汇报：建/改了哪几份文件、关键内容、怎么验收。不要谎报"完成"。

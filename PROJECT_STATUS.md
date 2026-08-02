@@ -27,6 +27,7 @@
 | 指标 | 现在 | 阈值 | 状态 |
 |---|---|---|---|
 | `scripts/verify.sh` | 通过 | 通过 = 绿 | 🟢 |
+| Claude / Codex 双端 manifest | 名称与版本一致，skills 共用 | 一致 = 绿 | 🟢 |
 | skill / agent 内部去重 | 是（方法论仅 skill 一处） | 唯一源 | 🟢 |
 | 真实项目 dogfood | 4（经营报表审计、礼仪 demo 审计+修复、本插件自治理、audit-blog 审计） | ≥2 | 🟢 |
 | 可发布底座 | git / LICENSE / CHANGELOG / .gitignore / verify 齐 | 齐 = 绿 | 🟢 |

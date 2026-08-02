@@ -1,6 +1,7 @@
 ---
 name: contract-first
-description: 分前端/后端（或多个服务）多端开发的项目，用一份接口契约（CONTRACT.md）当唯一真相源，各端只照它各做各的，防止字段漂移导致集成时白屏。支持单会话多 agent 和多终端各自跑两种模式。只要项目有前后端/多服务、接口字段老对不上、各端联调卡住、某端改了字段忘了通知别人、或前端为渲染一个页面要调一堆接口拼数据，就用这个 skill，哪怕用户没明说"契约"。这套方法论的学名是消费者驱动契约（Consumer-Driven Contracts, CDC）/ 契约测试。中文触发：契约式开发、接口契约、前后端协作、多终端协作、防字段漂移、接口对不上、联调、API 契约、字段命名不一致、集成白屏、唯一真相源、契约测试、CDC。English triggers: contract-first development, consumer-driven contracts, contract testing, API contract, frontend backend collaboration, multi-terminal, prevent field drift, provider verification.
+description: >-
+  分前端/后端（或多个服务）多端开发的项目，用一份接口契约（CONTRACT.md）当唯一真相源，各端只照它各做各的，防止字段漂移导致集成时白屏。支持单会话多 agent 和多终端各自跑两种模式。只要项目有前后端/多服务、接口字段老对不上、各端联调卡住、某端改了字段忘了通知别人、或前端为渲染一个页面要调一堆接口拼数据，就用这个 skill，哪怕用户没明说"契约"。这套方法论的学名是消费者驱动契约（Consumer-Driven Contracts, CDC）/ 契约测试。中文触发：契约式开发、接口契约、前后端协作、多终端协作、防字段漂移、接口对不上、联调、API 契约、字段命名不一致、集成白屏、唯一真相源、契约测试、CDC。English triggers: contract-first development, consumer-driven contracts, contract testing, API contract, frontend backend collaboration, multi-terminal, prevent field drift, provider verification.
 metadata:
   origin: ECC
 ---
@@ -29,7 +30,7 @@ metadata:
 这套契约协作有两种落地方式，纪律一致、组织方式不同：
 
 ### 模式 A — 单会话多 agent（中心化派活）
-一个 Claude 会话里，`contract-director` 拥有契约，**派出** `frontend-dev` / `backend-dev`（及更多服务工人）并行干活，最后由它集成对账。适合一人一个会话内推进、需要实时编排时。
+一个支持多 agent 的会话里，契约拥有者**派出**前端 / 后端（及更多服务工人）并行干活，最后由它集成对账。Claude Code 可使用 `contract-director`、`frontend-dev`、`backend-dev`；Codex 可由当前 agent 持有契约并使用内置 worker，任务提示中明确端别、文件所有权和“只读契约”的边界。适合一人一个会话内推进、需要实时编排时。
 
 ### 模式 B — 多终端各自跑（去中心化，契约当异步媒介）⭐ 更贴近真实团队
 终端1 跑前端、终端2 跑后端、终端N 跑某个服务，**各端完全独立、上下文隔离**，**没有一个活的主任在线派活**。协调的唯一媒介就是那份 `CONTRACT.md` 文件：
@@ -39,6 +40,8 @@ metadata:
 - 适合双终端/多终端、多人、跨时区——这才是大多数真实前后端团队的样子。
 
 **两种模式的铁律完全相同**：接口只在 `CONTRACT.md` 定义一次；各端只读不改；要改接口必须先改契约，绝不在实现里私自偏离。
+
+> 宿主适配：Claude Code 的 `/contract` 与自定义 agents 是交互适配层；Codex / ChatGPT 直接调用 `$contract-first` 并由当前 agent 执行同一流程。没有可用子 agent 时退化为顺序执行，不得因此跳过契约前置、提供方验证或集成对账。
 
 ## 三条核心纪律
 

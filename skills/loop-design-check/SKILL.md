@@ -1,6 +1,7 @@
 ---
 name: loop-design-check
-description: 把一个任务"写成"一个目标导向的 loop，并"检查"这个 loop 写得对不对、会不会跑飞——防止空转烧钱 / Goodhart 作弊 / 把错的干到底。两个动作：① 写 loop（先做减法判该不该建 → 定可判定目标 → 选回路类型 → 选骨架）② 体检 loop（过五个崩法 + 可判定性 + 边界 + 降级 + judge 独立 + 判断留人红线）。中文触发：写 loop、设计 loop、做一个 loop、把任务变 loop、agent 自动循环、检查 loop 对不对、loop 体检、loop 会不会跑飞、loop 空转烧钱、loop 作弊、目标导向循环、可判定目标、五个崩法、plan build judge、文档驱动派活、该不该建 loop。English triggers: design an agent loop, write a loop, check a loop, loop review, prevent runaway loop, goal-oriented loop, decidable goal, plan build judge.
+description: >-
+  把一个任务"写成"一个目标导向的 loop，并"检查"这个 loop 写得对不对、会不会跑飞——防止空转烧钱 / Goodhart 作弊 / 把错的干到底。两个动作：① 写 loop（先做减法判该不该建 → 定可判定目标 → 选回路类型 → 选骨架）② 体检 loop（过五个崩法 + 可判定性 + 边界 + 降级 + judge 独立 + 判断留人红线）。中文触发：写 loop、设计 loop、做一个 loop、把任务变 loop、agent 自动循环、检查 loop 对不对、loop 体检、loop 会不会跑飞、loop 空转烧钱、loop 作弊、目标导向循环、可判定目标、五个崩法、plan build judge、文档驱动派活、该不该建 loop。English triggers: design an agent loop, write a loop, check a loop, loop review, prevent runaway loop, goal-oriented loop, decidable goal, plan build judge.
 metadata:
   origin: 小磊 · 控制论×Loop×Goal
 ---

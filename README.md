@@ -1,6 +1,6 @@
 # docs-governance
 
-> 一个 Claude Code 插件，用「文档驱动开发」治理 AI 协作项目：把项目拆成各司其职的小文档，AI 照文档干活，并持续防止文档随代码腐烂。
+> 一个兼容 Claude Code、Codex 与 ChatGPT 的插件，用「文档驱动开发」治理 AI 协作项目：把项目拆成各司其职的小文档，AI 照文档干活，并持续防止文档随代码腐烂。
 
 ## 为什么需要它
 
@@ -72,14 +72,23 @@ AI 让代码变得**便宜、可丢弃、可再生**。当写代码不再是瓶�
 /plugin install docs-governance@docs-governance
 ```
 
-**方式二 — 本地软链**：`git clone` 本仓后，把 `skills/` `agents/` `commands/` 下的条目软链到 `~/.claude/` 对应目录（改源仓即时生效，适合要改内容的人）。
+**方式二 — Codex CLI：**
 
-**装好没？验收命令**：随便进一个项目敲 `/governance-audit`——看到一份只读审计报告（哪怕结论是"没治理文件"）就是装好了。
+```bash
+codex plugin marketplace add Seekers2001/docs-governance
+codex plugin add docs-governance@docs-governance
+```
+
+安装后新开一个 Codex 会话，通过 `$living-docs-governance`、`$contract-first`、`$test-collaboration` 或 `$module-regression` 显式调用；自然语言匹配时也可自动触发。Codex 会读取 `.codex-plugin/plugin.json`，Claude Code 继续读取原有 `.claude-plugin/plugin.json`，两端共用同一套 `skills/`。
+
+**方式三 — Claude Code 本地软链**：`git clone` 本仓后，把 `skills/` `agents/` `commands/` 下的条目软链到 `~/.claude/` 对应目录（改源仓即时生效，适合要改内容的人）。
+
+**装好没？** Claude Code 随便进一个项目敲 `/governance-audit`；Codex 新开会话后输入 `$living-docs-governance 只读审计当前项目`。看到一份只读审计报告（哪怕结论是“没治理文件”）就是装好了。
 
 ## 用法
 
 ```
-# 活文档治理
+# 活文档治理（以下为 Claude Code slash command）
 /governance-init         # 全新空项目：day-0 治理骨架（宪法+检查流程+流水账）
 /governance              # 已有代码项目：扫项目，生成/更新四件套
 /governance-audit        # 只读审计：哪儿漂移了，不动文件
@@ -99,12 +108,22 @@ AI 让代码变得**便宜、可丢弃、可再生**。当写代码不再是瓶�
 前后端分开开发，读取唯一接口契约，把消费者、提供者和联调测试登记到同一个 TEST-ID
 ```
 
+Codex / ChatGPT 使用对应 skill + 自然语言意图，例如：
+
+```text
+$living-docs-governance 只读审计当前项目
+$living-docs-governance 阶段收尾同步
+$contract-first 为订单详情页建立契约并分端实现
+$module-regression 按 REGRESSION.md 运行本模块与下游回归
+```
+
 ## 结构
 
 ```
 docs-governance/
-├── CLAUDE.md / CLAUDE_MAP.md / PROJECT_STATUS.md / PROJECT_LOG.md  # 插件自治理（dogfood）
-├── .claude-plugin/{plugin,marketplace}.json
+├── AGENTS.md / CLAUDE.md / CLAUDE_MAP.md / PROJECT_STATUS.md / PROJECT_LOG.md  # 插件自治理
+├── .codex-plugin/plugin.json                                      # Codex / ChatGPT 插件入口
+├── .claude-plugin/{plugin,marketplace}.json                       # Claude Code 插件入口
 ├── skills/{living-docs-governance,contract-first,module-regression,test-collaboration,loop-design-check}/SKILL.md  # 方法论唯一源
 ├── agents/{docs-governor,docs-auditor,contract-director,frontend-dev,backend-dev,regression-auditor}.md
 ├── commands/{governance-init,governance,governance-audit,governance-sync,governance-retro,contract,regression-audit}.md
@@ -118,7 +137,7 @@ docs-governance/
 
 ## 开发
 
-改任何文件后、提交前跑 `bash scripts/verify.sh`（检查 JSON 可解析、hook 可执行、命令→agent→skill/template/reference 不断链）。
+改任何文件后、提交前跑 `bash scripts/verify.sh`（检查 Claude/Codex manifest 一致、JSON 可解析、hook 可执行、命令→agent→skill/template/reference 不断链）。
 
 ---
 MIT · Seekers2001（小磊）· jiaxinleifm@outlook.com

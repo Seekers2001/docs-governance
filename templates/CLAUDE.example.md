@@ -2,7 +2,7 @@
 
 ## 进会话读取（分级，不是全读）
 默认只读：本文件全文 + `PROJECT_STATUS.md` 顶部红线块。
-`CLAUDE_MAP.md`（依赖/误导清单/别动区）、STATUS 指标、整本 LOG **按需读**；**新建/删除/重命名文件、跨模块改动前**必读 `CLAUDE_MAP.md` + STATUS 删除区。目录结构直接 `ls`/`glob`，不靠文档。详细分级协议见 living-docs-governance skill。
+需要定位文件、理解非显然的目录职责或整体结构时，按需读取 `CLAUDE_MAP.md`；**新建/删除/重命名文件、跨模块改动前**必读 `CLAUDE_MAP.md` + STATUS 删除区。普通目录结构直接 `ls`/`glob`，不要在本文件写死或复制地图。详细分级协议见 living-docs-governance skill。
 
 ## 硬规则（少而精：只放高杠杆的不可妥协约定）
 

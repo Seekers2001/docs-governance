@@ -15,3 +15,4 @@
 ## [2026-07-03] feat | 吸收「熵与法典」九层判定思想：module-regression 加判定点清单+铁律4坑必下沉；governance-audit 改两段流水线（新增 scripts/audit-cheap.sh 便宜层先跑红了短路）；living-docs 加标准变更留痕+LOG蒸馏升级为蒸馏+复盘；新增 /governance-retro（LOG复盘统计→下沉候选）；STATUS 模板加审计保鲜度。修 audit-cheap.sh bash3 多字节变量名吞并 bug（$VAR后紧跟中文标点须${VAR}）。
 
 ## [2026-07-12] feat | 测试协作治理 v1：新增 test-collaboration skill + TESTS.example 模板，盘点现有测试并把需求/Bug 转成 TEST-ID；REGRESSION.md 改为只管下游与回归命令并引用 TEST-ID；plugin 0.5.0，待真实项目试点
+## [2026-07-24] feat | test-collaboration 增加跨端契约测试链：同一机器可读契约驱动契约自身校验、消费者类型/mock 测试、提供方真实序列化验证和最小联调证据；TESTS 模板新增统一 TEST-ID 与证据表，不复制契约字段

@@ -75,6 +75,8 @@ metadata:
 | `CLAUDE_MAP.md` | **默认不读**（它只记树里看不出来的：依赖方向 / 误导清单 / 别动区；目录树本身按需 `ls`） | 找不到东西、要跨模块改、**新建/删/重命名文件前**，读它 |
 | `PROJECT_LOG.md` | **不读**（transcript） | 排查 bug、追溯"为什么删 / 为什么这么做"时，`grep` 或读尾部 |
 
+如果项目使用 `AGENTS.md` 作为跨 Agent 入口，也只需放同一条路标：需要定位文件、理解非显然的目录职责或整体结构时，按需读取 `CLAUDE_MAP.md`。不要把 MAP 内容复制进 `AGENTS.md` 或 `CLAUDE.md`，也不要在入口文件里写死目录树。
+
 常驻成本压到最小：CLAUDE 全文 + STATUS 红线几行 + MAP 索引头。大头（完整 MAP、STATUS 指标、整本 LOG）全按需。前三类是 **projection**（决定此刻喂什么），LOG 是 **transcript**（记录发生了什么）。
 
 **两条护栏（防"该读没读"——这是按需读唯一的真风险）：**

@@ -1,11 +1,11 @@
 ---
-description: 给全新（还没代码的）项目搭 day-0 治理骨架：精简 CLAUDE.md + Codex 的 AGENTS.md 桥接 + docs/governance.md 检查流程 + PROJECT_LOG.md + 目录骨架，并 git init 首提。已有代码的项目请用 /governance。
+description: 给全新（还没代码的）项目搭 day-0 治理骨架：精简 CLAUDE.md + Codex 的 AGENTS.md 桥接 + docs/governance.md 检查流程 + PROJECT_LOG.md，并 git init 首提。已有代码的项目请用 /governance。
 argument-hint: "[项目名 技术栈 模块划分]"
 ---
 
 给**当前工作目录的全新项目**搭 day-0 治理骨架。
 
-**分工（别用错命令）**：项目已有代码 → 用 `/governance`（扫描真实结构生成/更新四件套）；**空项目从零起步 → 用本命令**。本命令刻意只生成"三件 + 骨架"，不铺满四件套——渐进式采用，见 living-docs-governance skill。
+**分工（别用错命令）**：项目已有代码 → 用 `/governance`（扫描真实结构生成/更新四件套）；**空项目从零起步 → 用本命令**。本命令刻意只生成最小脊柱，不铺满目录和可选文档——渐进式采用，见 living-docs-governance skill。
 
 用户参数：`$ARGUMENTS`（项目名 / 技术栈 / 模块划分）。缺什么就逐项问，**不要猜技术栈**。
 
@@ -36,9 +36,9 @@ argument-hint: "[项目名 技术栈 模块划分]"
 
 **照 `templates/PROJECT_LOG.example.md` 的格式**建新文件，只留一行：`## [今天日期] init | /governance-init 项目初始化`。示例行不要抄进去。
 
-### 4. 目录骨架（只建空目录，不建文件）
+### 4. 必要目录（不建空壳）
 
-`src/ tests/ docs/ references/ logs/ output/`（目录名按技术栈惯例调整；`output/` 与 `logs/` 提醒用户加进 .gitignore）。
+只创建当前技术栈和已确认模块马上要使用的目录。`docs/` 因 `docs/governance.md` 已自然存在；`src/`、`tests/`、`references/`、`logs/`、`output/` 等没有首个文件时不要预建。运行产物目录一旦出现就加入 `.gitignore`。
 
 ### 5. pre-commit 护栏
 
@@ -51,6 +51,7 @@ argument-hint: "[项目名 技术栈 模块划分]"
 ## 刻意不生成的（防出生即漂移）
 
 - **CLAUDE_MAP.md / PROJECT_STATUS.md**：空项目没有值得记的依赖方向和健康指标，生成出来全是占位符=假文档。等预警信号出现（AI 开始找不到东西 / 重复踩坑 / 该删的又被重建）再跑 `/governance` 升级到四件套。
+- **CONTEXT.md / docs/adr/ / CONTRACT.md / TESTS.md / REGRESSION.md**：分别等稳定领域语言、难回退决策、跨端接口、必要测试点或模块联动真实出现后再创建。
 - **项目级 hook**：本插件自带的 Stop hook（`hooks/check-on-stop.sh`）检测到治理文件就自动生效，无需项目级 settings.json。
 
 ## 收尾汇报

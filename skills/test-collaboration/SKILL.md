@@ -21,7 +21,7 @@ description: "盘点并维护项目测试资产，把需求、业务规则、风
 | `TESTS.md` | 测试资产、必要测试点、缺口、状态和证据 |
 | 测试代码 | 可执行输入、断言、fixture/fake 和边界模拟 |
 | `REGRESSION.md` | 模块下游、回归命令和改动后的重跑规则；只引用 TEST-ID |
-| Bug/Issue 清单 | 记录问题现象、影响、优先级和修复状态 |
+| Spec/Issue | 成功标准、问题现象、影响、优先级、任务状态和排期的唯一来源 |
 | `PROJECT_LOG.md` | 只追加测试状态变化和交付结论，不复制整个清单 |
 
 v1 由当前会话直接执行本 skill，不新增专用 agent、slash command 或强制脚本。
@@ -33,7 +33,7 @@ v1 由当前会话直接执行本 skill，不新增专用 agent、slash command 
 1. `TESTS.md` 与 `templates/TESTS.example.md`。
 2. 项目规则和地图，如 `CLAUDE.md`、`AGENTS.md`、`CLAUDE_MAP.md`。
 3. 测试目录、测试配置、CI 配置、标准测试入口和专用测试任务。
-4. Bug、Issue、审计、事故或回归清单。
+4. Spec、Bug、Issue、审计、事故或回归清单；成功标准只引用，不复制进 `TESTS.md`。
 5. `REGRESSION.md`，用于对齐模块回归命令与 TEST-ID。
 6. 跨端接口的机器可读契约及生成/校验入口，例如 OpenAPI、JSON Schema、GraphQL schema 或 protobuf。
 
@@ -70,6 +70,8 @@ v1 由当前会话直接执行本 skill，不新增专用 agent、slash command 
 - 层级与用途。
 - 执行组和真实/模拟边界。
 - 测试文件、测试节点和可执行命令。
+
+来源必须链接回 Spec/Issue 中的原始成功标准。`TESTS.md` 只回答“哪条证据验证它”，不得另写一份可独立漂移的业务标准。成功标准含糊时，回到需求澄清能力或请项目负责人确认，不由测试 Skill 猜测。
 
 受控层级：`单元`、`集成`、`契约`、`E2E`、`冒烟`。
 
@@ -115,6 +117,8 @@ TEST-ID 应复现真实失败形状，而不是换成更容易通过的相似输
 5. 证据能对应 TEST-ID 的输入、预期和边界。
 
 只看到测试文件、测试数量或绿色 CI，不足以证明必要规则已覆盖。
+
+交付闭环还要确认：活跃 Spec/Issue 有明确成功标准；关键标准已关联 TEST-ID 或可复核的人工出口；证据确实验证预期行为；标准变化和本次重要结果已按活文档规则记入 `PROJECT_LOG.md`。
 
 ## 测试设计纪律
 

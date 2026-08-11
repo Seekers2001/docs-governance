@@ -1,7 +1,7 @@
 {
   "name": "docs-governance",
-  "version": "0.6.0",
-  "description": "面向 Claude Code、Codex 与 ChatGPT 的文档驱动开发治理插件：(1) 活文档治理；(2) 契约式协作；(3) TESTS.md 测试资产治理；(4) REGRESSION.md 模块回归治理。",
+  "version": "0.7.0",
+  "description": "面向 Claude Code、Codex 与 ChatGPT 的文档治理插件：活文档、领域上下文、ADR、变更影响、契约、测试、回归与结构化日志索引。",
   "author": {
     "name": "Seekers2001",
     "email": "jiaxinleifm@outlook.com"
@@ -14,6 +14,9 @@
     "frontend-backend",
     "testing",
     "test-governance",
+    "architecture-decision-record",
+    "change-impact",
+    "project-log",
     "context-engineering"
   ]
 }

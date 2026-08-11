@@ -19,6 +19,8 @@
 | 全局配置入口 | `config/settings.yaml` | 不是 `.env` |
 | 某个 agent 工具怎么注册 | `src/agent/tool_registry.py` | 加工具要同步这里 |
 
+项目已启用对应载体时，再把知识入口挂在这里：领域词汇 → `CONTEXT.md`；架构/数据库决策 → `docs/adr/README.md`；接口 → `CONTRACT.md`；测试证据 → `TESTS.md`；下游回归 → `REGRESSION.md`；任务与排期 → Issue Tracker。只挂入口，不枚举每个 ADR、Issue、Spec 或任务。
+
 ## 3. 树真实但会骗你的（最值钱的一栏）
 
 > 文件树看着正常、其实有坑的地方。这是这份地图最不可替代的内容——`ls` 给你看到它们，却不会告诉你"别信"。

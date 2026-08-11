@@ -1,7 +1,7 @@
 ---
 name: living-docs-governance
 description: >-
-  把长期项目的文档当成一个小系统来维护，防止文档腐烂——四份各司其职的治理文件（CLAUDE.md 共享章程 / CLAUDE_MAP.md 地图 / PROJECT_STATUS.md 健康仪表盘 / PROJECT_LOG.md 流水账）+ Codex 的 AGENTS.md 入口桥接 + 固定的进会话读序。用于新建治理骨架、治理审计、阶段同步、LOG 复盘，以及项目文档漂移治理。中文触发：文档治理、活文档、防文档漂移、治理初始化、治理审计、治理同步、治理复盘、AGENTS.md、项目状态追踪、项目地图、健康仪表盘、流水账、长期项目治理。English triggers: living documentation, docs governance, governance init, governance audit, governance sync, governance retrospective, AGENTS.md bridge, prevent doc rot, project status dashboard, project map, append-only changelog.
+  把长期项目的文档当成一个小系统来维护，防止文档腐烂——四份各司其职的脊柱文件（CLAUDE.md 共享章程 / CLAUDE_MAP.md 地图 / PROJECT_STATUS.md 健康仪表盘 / PROJECT_LOG.md 流水账）+ Codex 的 AGENTS.md 入口桥接 + 固定读序，并按需连接 CONTEXT、ADR、契约、测试、回归和 Issue Tracker。用于治理初始化、只读审计、阶段同步、LOG 复盘与超过 200 条事件后的归档索引。中文触发：文档治理、活文档、防文档漂移、治理初始化、治理审计、治理同步、治理复盘、AGENTS.md、项目状态追踪、项目地图、健康仪表盘、流水账、日志归档、长期项目治理。English triggers: living documentation, docs governance, governance init, governance audit, governance sync, governance retrospective, AGENTS.md bridge, prevent doc rot, project status dashboard, project map, append-only changelog, project log archive.
 metadata:
   origin: ECC
 ---
@@ -47,7 +47,7 @@ metadata:
 
 ## 怎么运作
 
-这套系统 = **四份文档**（角色严格分离）+ **分级读取协议** + 让它们保持最新的**更新规则** + 阶段收尾时的**查漏补缺矩阵**。
+这套系统 = **四份脊柱文档**（角色严格分离）+ **分级读取协议** + 让它们保持最新的**更新规则** + 阶段收尾时的**查漏补缺矩阵**。`CONTEXT.md`、`docs/adr/`、契约、测试和回归台账都是按真实需要长出的血肉，不是第五到第九份必建脊柱。
 
 ### Claude Code / Codex 入口适配
 
@@ -63,6 +63,8 @@ metadata:
 
 Codex / ChatGPT 执行时，读取对应流程文件，忽略其中 Claude Code 专用的 frontmatter、`$ARGUMENTS` 语法和自定义 agent 调用；由当前 agent 承担同一职责并保留原有读写边界。只读审计、只读复盘不得因为宿主不同而变成写操作。
 
+审计支持 `spine`、`context`、`adr`、`artifacts`、`full` 五种范围。先运行 `scripts/audit-cheap.sh <scope>` 做确定性检查；断链失败就短路，只有通过后才进入语义判断。默认只读；只有用户明确要求保存时，才把报告写入 `docs/audits/YYYY-MM-DD-*.md`。
+
 ### 四份文档与各自的职责
 
 | 文档 | 唯一职责 | 该放什么 | 绝不能放什么 |
@@ -73,6 +75,12 @@ Codex / ChatGPT 执行时，读取对应流程文件，忽略其中 Claude Code 
 | `PROJECT_LOG.md` | 流水账：只追加的历史 | 每件有意义的事一行（`[日期] 类型 \| 摘要`），新条目追加到底 | 当前状态（属 STATUS）、结构（属 MAP）；永不改/删旧行 |
 
 让它生效的纪律是**非重叠**：每个事实只活在一份文档里。"auth 模块在哪？"→ 地图。"覆盖率现在健康吗？"→ STATUS。"旧解析器啥时候删的、为啥？"→ LOG。每份只干一件事，就不会一起烂。
+
+### 可选上下文、决策与排期
+
+- 稳定领域术语、概念关系和歧义反复影响协作时，才创建根目录 `CONTEXT.md`；它不写实现、状态、任务、需求全文或决策。具体边界见 `context-and-decisions`。
+- 出现架构、数据库、认证、部署、数据模型或 API 版本等难回退决策时，才创建 `docs/adr/README.md` 和一项决策一个 ADR 文件。MAP 只指向 ADR 索引，不枚举所有决策。
+- 任务、负责人、阻塞和项目排期由 GitHub Issues、Linear 或项目已有 Tracker 管理；没有外部 Tracker 时再采用本地 `.scratch/`。`PROJECT_STATUS.md` 只保留当前健康快照，不承担排期。
 
 ### 分级读取协议（按需读，但红线常驻）
 
@@ -99,10 +107,14 @@ Codex / ChatGPT 执行时，读取对应流程文件，忽略其中 Claude Code 
 1. **不确定就升级全读。** 拿不准这次要不要读完整 MAP/STATUS → **默认读全**，不要为省 token 赌一把。省 token 是小钱；在过期地图上铺代码、重建已删文件是大坑。
 2. **动手改文件前必读，不只是进会话时。** 真正的危险不在进会话，在你准备**新建 / 删除 / 重命名文件、跨目录改动**那一刻——这些操作**强制**先读完整 `CLAUDE_MAP.md` 对应段 + `PROJECT_STATUS.md` 删除区，确认没踩禁区、没复活已删文件。
 
-> **LOG 防腐：定期蒸馏 + 复盘。** `PROJECT_LOG.md` 只追加，注定越长越腐——这是这套架构最大的腐烂点。约定一个阈值（如超过 200 行或每季度），做两件事：
-> 1. **蒸馏归档**：有价值的结论压缩进 `CLAUDE_MAP.md` / `PROJECT_STATUS.md`，原始流水转入 `PROJECT_LOG.archive.md`，主 LOG 只留近期。
-> 2. **目录 + 内容分层**：主 LOG 只当**目录**——每条一行（`[日期] 类型 | 一句话`），需要长详情（完整审计报告、大段修复记录）时下沉到独立文件（如 `docs/log-details/2026-07-03-audit.md`），目录行尾挂链接。主 LOG 永远短、可整读；详情按需点开。这就是「脊柱保持瘦、血肉下沉」用在 LOG 自己身上。
-> 3. **复盘统计**（LOG 不只是负担，是资产）：归档前跑一次 `/governance-retro`，统计哪个模块出错最多、哪类错误重复出现、标准变更了几次——**重复 TOP 的错误 = "该下沉成 lint / 回归测试"的候选清单**（见 `module-regression` 铁律"坑必下沉"）。同一个坑在 LOG 里出现第二次，说明它还没被机器接管。
+> **LOG 防腐：按事件计数 + 复盘 + 可重建索引。** `PROJECT_LOG.md` 的事件格式是 `## [日期] 类型 | 摘要`；阈值按事件数计算，不按原始行数。活跃事件不超过 200 条时只用 Markdown；超过 200 条后：
+> 1. **先只读复盘**：识别重复问题和应下沉的 lint / TEST-ID / 回归保护。
+> 2. **经用户确认再归档**：运行 `python3 <插件目录>/scripts/project-log-index.py archive --root <项目根> --yes`。旧事件原样进入 `PROJECT_LOG.archive.md`，活跃 LOG 默认保留最近 100 条；归档是受控压缩例外，不得手工删改历史。
+> 3. **建立派生索引**：脚本从活跃 LOG + archive 重建 `.governance/project-log.sqlite`。数据库默认进 `.gitignore`，不是唯一事实源；损坏或删除后运行 `rebuild` 即可恢复。
+> 4. **分类不猜**：类型取事件头；模块只在明确写出或能从真实路径解析时登记，否则为 `unclassified`；引用只提取 commit、TEST-ID、ADR、CONTRACT 和明确路径。内容哈希保证幂等。
+> 5. **失败不伤原文**：解析、归档或建库失败时，不得留下被截断的 `PROJECT_LOG.md`。审计以活跃文件和 archive 的事件合集判断只追加完整性。
+> 6. **目录 + 内容分层**：主 LOG 只当**目录**——每条一行（`[日期] 类型 | 一句话`），需要长详情（完整审计报告、大段修复记录）时下沉到独立文件（如 `docs/log-details/2026-07-03-audit.md`），目录行尾挂链接。主 LOG 永远短、可整读；详情按需点开。这就是「脊柱保持瘦、血肉下沉」用在 LOG 自己身上。
+> 7. **复盘统计**（LOG 不只是负担，是资产）：归档前跑一次 `/governance-retro`，统计哪个模块出错最多、哪类错误重复出现、标准变更了几次——**重复 TOP 的错误 = "该下沉成 lint / 回归测试"的候选清单**（见 `module-regression` 铁律"坑必下沉"）。同一个坑在 LOG 里出现第二次，说明它还没被机器接管。
 
 ### 防腐烂的更新规则
 
@@ -121,6 +133,8 @@ Codex / ChatGPT 执行时，读取对应流程文件，忽略其中 Claude Code 
 - 长期硬规则、读序、不可妥协约定 → `CLAUDE.md`
 - 重要历史事件 → `PROJECT_LOG.md`（只追加）
 - 前后端接口字段 → `CONTRACT.md`（若项目有契约治理）
+- 领域术语或关系变化 → `CONTEXT.md`（若存在且证据已确认）
+- 难回退技术决策 → `docs/adr/`（若触发 ADR）
 
 关键区别：`PROJECT_LOG.md` 是记录员，只追加历史；`CLAUDE_MAP.md` / `PROJECT_STATUS.md` / `CLAUDE.md` 是编辑过的当前真相，发现旧事实过期要修正、合并或删除。
 
@@ -137,7 +151,7 @@ Codex / ChatGPT 执行时，读取对应流程文件，忽略其中 Claude Code 
 | 现在健康吗、啥是禁区 | 仪表盘 | `PROJECT_STATUS.md`（脊柱） |
 | 发生过什么 | 流水账 | `PROJECT_LOG.md`（脊柱） |
 | 要做什么 / 怎么做 | 规范 | spec / plan / 模块规则 |
-| 为什么这么做 | 决策 / 修复记录 | 设计 doc / FIX- / CHECK- |
+| 为什么这么做 | 决策 / 修复记录 | `docs/adr/` / FIX- / CHECK- |
 | 照着抄的真相 | 参考 / 契约 | 数据源图 / `CONTRACT.md` / references |
 | 某次结果 | 产物 / 审计 | 带日期的审计或报告 |
 | 过期但留着 | 归档 | `*/archive/` |
@@ -158,6 +172,8 @@ Codex / ChatGPT 执行时，读取对应流程文件，忽略其中 Claude Code 
 - `templates/CLAUDE_MAP.example.md`
 - `templates/PROJECT_STATUS.example.md`
 - `templates/PROJECT_LOG.example.md`
+- `templates/context.example.md`（稳定领域语言出现时才用）
+- `templates/adr-index.example.md` / `templates/adr.example.md`（难回退决策出现时才用）
 
 ## 一份填好的 PROJECT_STATUS 长这样
 
@@ -191,3 +207,5 @@ Codex / ChatGPT 执行时，读取对应流程文件，忽略其中 Claude Code 
 - `docs-auditor` agent —— 照本方法论只读审计四件套是否漂移、重复、虚构路径或指标未验证。
 - `references/governance-sync-matrix.md` —— 阶段收尾时判断"本次变化应同步哪份治理文档"的影响矩阵。
 - `contract-first` skill —— 当项目分前后端两层、需要防接口字段漂移时，那套契约方法论的姊妹篇。
+- `context-and-decisions` skill —— 管稳定领域语言与架构/数据库等难回退决策。
+- `change-impact` skill —— 修改前收集影响证据，实施后对照实际 diff、验证与文档同步。

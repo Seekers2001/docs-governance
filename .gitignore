@@ -12,3 +12,8 @@ node_modules/
 # 本地环境
 .env
 *.local
+.claude/settings.json
+.playwright-mcp/
+
+# 文档治理派生索引（从 PROJECT_LOG*.md 重建）
+.governance/

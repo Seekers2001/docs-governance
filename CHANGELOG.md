@@ -2,6 +2,19 @@
 
 本插件的版本变更记录。格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/)。
 
+## [0.7.0] - 2026-08-02
+
+### 新增
+- 新增 `docs-governance` 总路由、`context-and-decisions` 与 `change-impact` 三个 Skill；Codex 可从一个入口按需进入 CONTEXT、ADR、契约、测试、回归和治理同步。
+- 新增 CONTEXT / ADR 模板，并用 `docs/adr/` 记录本插件的 PROJECT_LOG SQLite 索引决策。
+- 新增 `scripts/project-log-index.py`：按事件计数，超过 200 条后经确认归档旧事件，并从 Markdown 原文重建本地 SQLite 索引。
+- 新增 `scripts/audit-docs.py` 及 spine/context/adr/artifacts/full 审计范围，检查断链、ADR 索引、LOG 完整性、TEST-ID 和孤儿文档。
+
+### 变更
+- 文档架构明确为“根脊柱 = 当前导航、可选文档 = 持久知识、Issue Tracker = 任务排期、SQLite = 机器投影”，所有目录按需懒创建。
+- 成功标准留在 Spec/Issue 唯一来源；TESTS 关联证据，变更影响在实施前后核对迁移、回滚、实际 diff 和文档同步。
+- `verify.sh` 新增总路由/README/使用说明一致性、派生数据库忽略、Python 编译和单元测试检查。
+
 ## [0.6.0] - 2026-08-02
 
 ### 新增

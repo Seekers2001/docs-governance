@@ -1,7 +1,7 @@
 {
   "name": "docs-governance",
-  "version": "0.6.0",
-  "description": "面向 Claude Code、Codex 与 ChatGPT 的文档驱动开发治理插件：治理活文档、跨端契约、测试资产与模块回归。",
+  "version": "0.7.0",
+  "description": "面向 Claude Code、Codex 与 ChatGPT 的文档治理插件：活文档、领域上下文、ADR、变更影响、契约、测试、回归与结构化日志索引。",
   "author": {
     "name": "Seekers2001",
     "email": "jiaxinleifm@outlook.com",
@@ -17,13 +17,16 @@
     "contract-first",
     "testing",
     "regression",
+    "adr",
+    "change-impact",
+    "sqlite",
     "codex"
   ],
   "skills": "./skills/",
   "interface": {
     "displayName": "Docs Governance",
-    "shortDescription": "防止项目文档、接口与回归证据漂移",
-    "longDescription": "用活文档、契约优先、测试资产台账与模块回归清单治理长期 AI 协作项目。",
+    "shortDescription": "治理项目知识、决策、影响与验证证据",
+    "longDescription": "用薄脊柱、领域上下文、ADR、变更影响、契约、测试与回归证据治理长期 AI 协作项目，并为大型日志建立可重建索引。",
     "developerName": "Seekers2001",
     "category": "Productivity",
     "capabilities": [
@@ -32,9 +35,10 @@
     ],
     "websiteURL": "https://github.com/Seekers2001/docs-governance",
     "defaultPrompt": [
+      "用 $docs-governance 判断当前项目该启用哪些治理能力。",
       "审计当前项目的治理文档是否已经漂移。",
-      "为当前项目建立轻量的活文档治理。",
-      "盘点测试资产并把缺口登记为 TEST-ID。"
+      "分析这项变更会影响哪些代码、契约、测试、文档和回滚路径。",
+      "为架构或数据库决策建立 ADR。"
     ],
     "brandColor": "#2F6B5F"
   }

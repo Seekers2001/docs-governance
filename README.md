@@ -29,6 +29,26 @@ AI 让代码变得**便宜、可丢弃、可再生**。当写代码不再是瓶�
 
 第四条线是**测试协作治理**（`test-collaboration`）：一份 `TESTS.md` 盘点现有测试资产，把需求、规则、风险和 Bug 登记成 TEST-ID，持续暴露必要、缺失、疑似重复和疑似废弃的测试。前后端或多服务分开开发时，同一个 TEST-ID 引用唯一机器可读契约，串起消费者、提供者和联调测试证据。它回答“应该测什么、为什么测、证据在哪”；`REGRESSION.md` 只回答“改完重跑什么”。
 
+`docs-governance` 是 Codex/ChatGPT 的薄总路由：普通治理进入活文档；稳定领域语言进入 `context-and-decisions` 的 `CONTEXT.md`；架构、数据库、认证、部署等难回退决定进入一项一文件的 ADR；改代码前后用 `change-impact` 核对代码、数据、契约、测试、文档、发布和回滚。
+
+插件还保留 `loop-design-check`：当任务本身需要设计可判定目标、反馈回路和停止条件时使用；它由总路由登记，但不把 loop 文档混入项目治理脊柱。
+
+文档审计仍坚持“便宜层先判”：`scripts/audit-docs.py` 检查断链、ADR 索引、LOG 完整性、TEST-ID 和孤儿文档；确定性问题通过后，才由 agent 判断术语冲突、决策冲突、重复真相和成功标准证据。审计默认只读。
+
+`PROJECT_LOG.md` 按事件数治理：不超过 200 条只用 Markdown；超过后先复盘，经确认把旧事件原样归档，并生成 `.governance/project-log.sqlite` 本地派生索引。Markdown 始终是 Git 可读事实源；数据库可随时重建，也不负责项目排期。
+
+## 项目文档怎么分层
+
+| 层 | 建议载体 | 管什么 |
+|---|---|---|
+| 根脊柱 | `CLAUDE.md` / `CLAUDE_MAP.md` / `PROJECT_STATUS.md` / `PROJECT_LOG.md` | 规则、导航、当前健康、历史 |
+| 可选根载体 | `CONTEXT.md` / `CONTRACT.md` / `TESTS.md` / `REGRESSION.md` | 领域语言、接口、测试证据、下游回归 |
+| 持久知识 | `docs/adr/` / `docs/specs/` / `docs/plans/` / `docs/audits/` / `docs/reviews/` / `docs/log-details/` / `docs/archive/` | 决策、规格、计划、产物和归档；有真实内容时才创建 |
+| 任务与排期 | GitHub Issues / Linear / 现有 Tracker；无外部系统时可用 `.scratch/` | 负责人、状态、阻塞、项目 schedule |
+| 机器投影 | `.governance/project-log.sqlite` | 大型 LOG 的分类与查询；默认 gitignored，可重建 |
+
+`CLAUDE_MAP.md` 只负责告诉 agent“这些知识入口在哪里、哪些目录会骗人、依赖方向是什么”，不复制每个 ADR、Issue、Spec 或任务内容。
+
 ## 治理常见错误（dogfood 里反复撞到的）
 
 | 错误 | 正确做法 |
@@ -79,11 +99,11 @@ codex plugin marketplace add Seekers2001/docs-governance
 codex plugin add docs-governance@docs-governance
 ```
 
-安装后新开一个 Codex 会话，通过 `$living-docs-governance`、`$contract-first`、`$test-collaboration` 或 `$module-regression` 显式调用；自然语言匹配时也可自动触发。Codex 会读取 `.codex-plugin/plugin.json`，Claude Code 继续读取原有 `.claude-plugin/plugin.json`，两端共用同一套 `skills/`。
+安装后新开一个 Codex 会话，优先通过 `$docs-governance` 让总路由选择能力，也可以显式调用 `$living-docs-governance`、`$context-and-decisions`、`$change-impact`、`$contract-first`、`$test-collaboration` 或 `$module-regression`。Codex 会读取 `.codex-plugin/plugin.json`，Claude Code 继续读取原有 `.claude-plugin/plugin.json`，两端共用同一套 `skills/`。
 
 **方式三 — Claude Code 本地软链**：`git clone` 本仓后，把 `skills/` `agents/` `commands/` 下的条目软链到 `~/.claude/` 对应目录（改源仓即时生效，适合要改内容的人）。
 
-**装好没？** Claude Code 随便进一个项目敲 `/governance-audit`；Codex 新开会话后输入 `$living-docs-governance 只读审计当前项目`。看到一份只读审计报告（哪怕结论是“没治理文件”）就是装好了。
+**装好没？** Claude Code 随便进一个项目敲 `/governance-audit`；Codex 新开会话后输入 `$docs-governance 只读审计当前项目`。看到一份只读审计报告（哪怕结论是“没治理文件”）就是装好了。
 
 ## 用法
 
@@ -106,13 +126,21 @@ codex plugin add docs-governance@docs-governance
 盘点这个项目的测试资产，按 templates/TESTS.example.md 生成 TESTS.md
 读取 Bug 清单，把缺少保护的 Bug 登记成 TEST-ID，并给出补测清单
 前后端分开开发，读取唯一接口契约，把消费者、提供者和联调测试登记到同一个 TEST-ID
+
+# Codex 总路由 / 上下文与决策 / 变更影响
+$docs-governance 判断这个项目该启用哪些治理能力
+$context-and-decisions 为这项数据库选型建立 ADR
+$change-impact 修改订单数据模型前分析影响、迁移和回滚
 ```
 
 Codex / ChatGPT 使用对应 skill + 自然语言意图，例如：
 
 ```text
+$docs-governance 治理当前项目，并告诉我该走哪个专项 Skill
 $living-docs-governance 只读审计当前项目
 $living-docs-governance 阶段收尾同步
+$context-and-decisions 统一领域术语并记录架构决策
+$change-impact 分析这次修改的牵连面，实施后再对照实际 diff
 $contract-first 为订单详情页建立契约并分端实现
 $module-regression 按 REGRESSION.md 运行本模块与下游回归
 ```
@@ -124,20 +152,21 @@ docs-governance/
 ├── AGENTS.md / CLAUDE.md / CLAUDE_MAP.md / PROJECT_STATUS.md / PROJECT_LOG.md  # 插件自治理
 ├── .codex-plugin/plugin.json                                      # Codex / ChatGPT 插件入口
 ├── .claude-plugin/{plugin,marketplace}.json                       # Claude Code 插件入口
-├── skills/{living-docs-governance,contract-first,module-regression,test-collaboration,loop-design-check}/SKILL.md  # 方法论唯一源
+├── skills/{docs-governance,living-docs-governance,context-and-decisions,change-impact,...}/SKILL.md  # 路由与方法论唯一源
 ├── agents/{docs-governor,docs-auditor,contract-director,frontend-dev,backend-dev,regression-auditor}.md
 ├── commands/{governance-init,governance,governance-audit,governance-sync,governance-retro,contract,regression-audit}.md
-├── templates/*.example.md                                          # 含 TESTS / REGRESSION 等空白模板
+├── docs/adr/                                                       # 插件自身的架构/数据库决策
+├── templates/*.example.md                                          # 含 CONTEXT / ADR / TESTS / REGRESSION 等模板
 ├── references/governance-sync-matrix.md
 ├── hooks/{check-on-stop.sh,hooks.json}                             # 会话结束治理提醒
-└── scripts/verify.sh                                               # 结构完整性自检
+└── scripts/{verify.sh,audit-docs.py,project-log-index.py}          # 结构自检、文档审计、日志索引
 ```
 
 > skill = 方法论（唯一源），agent = 照方法论干活的人，command = 按钮，template = 空白表格。方法论只写在 skill 里，agent 不复制——**一个防文档漂移的插件，自己内部先不漂移。**
 
 ## 开发
 
-改任何文件后、提交前跑 `bash scripts/verify.sh`（检查 Claude/Codex manifest 一致、JSON 可解析、hook 可执行、命令→agent→skill/template/reference 不断链）。
+改任何文件后、提交前跑 `bash scripts/verify.sh`（检查 Claude/Codex manifest 一致、JSON、hook、路由与引用不断链，并执行单元测试）。关键 Skill 另用 Codex `quick_validate.py` 校验。
 
 ---
 MIT · Seekers2001（小磊）· jiaxinleifm@outlook.com

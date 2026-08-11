@@ -16,3 +16,6 @@
 - 项目有什么、在哪找 → `CLAUDE_MAP.md`
 - 当前健康度 / 禁区 / 待删 → `PROJECT_STATUS.md`
 - 历史 / 改了什么 / 为什么 → `PROJECT_LOG.md`
+- 稳定领域术语 → `CONTEXT.md`（仅当项目已启用）
+- 架构 / 数据库等难回退决策 → `docs/adr/README.md`（仅当项目已启用）
+- 任务、负责人、阻塞与排期 → 项目已有 Issue Tracker（不要复制进 STATUS / LOG）

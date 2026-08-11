@@ -8,7 +8,7 @@
     {
       "name": "docs-governance",
       "source": "./",
-      "description": "兼容 Claude Code、Codex 与 ChatGPT 的文档驱动开发插件：活文档防腐烂 + 契约式协作 + 测试资产治理 + 模块联动回归。"
+      "description": "兼容 Claude Code、Codex 与 ChatGPT：活文档、领域上下文、ADR、变更影响、契约、测试、回归与日志索引。"
     }
   ]
 }

@@ -2,6 +2,33 @@
 
 > 一个兼容 Claude Code、Codex 与 ChatGPT 的插件，用「文档驱动开发」治理 AI 协作项目：把项目拆成各司其职的小文档，AI 照文档干活，并持续防止文档随代码腐烂。
 
+> English overview: [README.en.md](README.en.md) · 完整使用说明：[使用说明.md](使用说明.md) · 参与贡献：[CONTRIBUTING.md](CONTRIBUTING.md)
+
+## 3 分钟试用
+
+1. 在 Claude Code 中安装：
+
+   ```text
+   /plugin marketplace add Seekers2001/docs-governance
+   /plugin install docs-governance@docs-governance
+   ```
+
+2. 在一个已有代码的项目中运行只读检查：
+
+   ```text
+   /governance-audit
+   ```
+
+   或在 Codex / ChatGPT 中输入：
+
+   ```text
+   $docs-governance 只读审计当前项目，并告诉我最该先补哪一项治理能力
+   ```
+
+3. 先看报告，不让工具直接改文件。确认后再用 `/governance` 或对应专项 Skill 更新文档。
+
+这个插件的默认姿态是“**先审计、后决定、再修改**”：小项目不强塞四件套；已有项目也会尽量沿用现有的目录与事实来源。
+
 ## 为什么需要它
 
 AI 让代码变得**便宜、可丢弃、可再生**。当写代码不再是瓶颈，承重的东西就上移到**意图（文档）**和**验证（测试）**——人维护的是规格和验收，代码只是规格的一次投影。

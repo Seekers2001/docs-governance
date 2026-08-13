@@ -1,0 +1,35 @@
+name: Workflow proposal
+description: Propose a focused governance workflow improvement.
+title: "proposal: "
+labels: [proposal]
+body:
+  - type: markdown
+    attributes:
+      value: "Workflow changes need a concrete recurring problem, not only a general capability idea."
+  - type: textarea
+    id: problem
+    attributes:
+      label: Concrete problem
+      description: "What fails today? Include an example project workflow if possible."
+    validations:
+      required: true
+  - type: textarea
+    id: current_behavior
+    attributes:
+      label: Existing workflow considered
+      description: "Which existing skill or document was checked, and why does it not cover the need?"
+    validations:
+      required: true
+  - type: textarea
+    id: minimal_change
+    attributes:
+      label: Smallest proposed change
+      description: "Prefer a change to an existing skill, template, or check over a new framework."
+    validations:
+      required: true
+  - type: textarea
+    id: non_goals
+    attributes:
+      label: Non-goals
+    validations:
+      required: true

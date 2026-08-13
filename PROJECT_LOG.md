@@ -18,3 +18,4 @@
 ## [2026-07-24] feat | test-collaboration 增加跨端契约测试链：同一机器可读契约驱动契约自身校验、消费者类型/mock 测试、提供方真实序列化验证和最小联调证据；TESTS 模板新增统一 TEST-ID 与证据表，不复制契约字段
 ## [2026-08-02] feat | 新增 Codex/ChatGPT 插件 manifest 与 AGENTS.md 薄桥接；共用现有 skills，补 Codex 直接调用、宿主 agent 降级、双端安装说明和 manifest 一致性校验
 ## [2026-08-02] feat | 文档治理 v0.7：新增总路由、CONTEXT/ADR、变更影响、五范围只读审计与 PROJECT_LOG 超 200 事件后的 Markdown 归档 + SQLite 可重建索引；12 个单测覆盖关键确定性行为
+## [2026-08-13] docs | 面向公开试用补英文概览、三分钟只读审计路径与贡献模板；不新增方法论，外部协作仍以现有 Skill 为唯一源

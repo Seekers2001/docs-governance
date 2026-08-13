@@ -1,0 +1,34 @@
+name: Bug report
+description: Report a reproducible problem in a skill, command, script, or template.
+title: "bug: "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: "Please remove credentials, private project paths, and customer data before submitting."
+  - type: input
+    id: component
+    attributes:
+      label: Affected component
+      placeholder: "For example: skills/living-docs-governance or /governance-audit"
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Minimal reproduction
+      description: "Include the command or prompt, sanitized output, and relevant environment details."
+    validations:
+      required: true

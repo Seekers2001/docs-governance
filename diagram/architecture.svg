@@ -25,7 +25,7 @@
   <rect width="100%" height="100%" fill="url(#grid)"/>
 
   <text x="40" y="42" fill="#f8fafc" font-size="20" font-weight="700">docs-governance 当前架构</text>
-  <text x="40" y="65" fill="#94a3b8" font-size="10">skills/ 是方法论窄腰 · Markdown 是事实源 · 宿主只做 Adapter · 审计默认只读</text>
+  <text x="40" y="65" fill="#94a3b8" font-size="10">skills/ 是方法论窄腰 · 事实按类型认来源 · 宿主只做 Adapter · 审计默认只读</text>
 
   <!-- Code dependency region -->
   <rect x="30" y="92" width="1500" height="800" rx="14" fill="none" stroke="#fbbf24" stroke-width="1.2" stroke-dasharray="12,4"/>
@@ -117,16 +117,16 @@
   <rect x="535" y="640" width="380" height="70" rx="7" fill="#0f172a"/>
   <rect x="535" y="640" width="380" height="70" rx="7" fill="rgba(6,78,59,0.4)" stroke="#34d399" stroke-width="1.5"/>
   <text x="725" y="669" fill="#f8fafc" font-size="10" font-weight="600" text-anchor="middle">scripts/ · hooks/ · GitHub Actions</text>
-  <text x="725" y="689" fill="#94a3b8" font-size="8" text-anchor="middle">审计 · 索引 · verify · 提醒 · CI</text>
-  <text x="725" y="754" fill="#64748b" font-size="8" text-anchor="middle">退出码负责机械判定，语义判断留给 Agent</text>
+  <text x="725" y="689" fill="#94a3b8" font-size="8" text-anchor="middle">共享日志解析 · 审计结果 → 文字 / JSON · verify</text>
+  <text x="725" y="754" fill="#64748b" font-size="8" text-anchor="middle">结果区分失败、未验证与执行错误，语义判断留给 Agent</text>
 
   <rect x="995" y="585" width="490" height="220" rx="12" fill="none" stroke="#a78bfa" stroke-width="1.2" stroke-dasharray="8,4"/>
-  <text x="1013" y="612" fill="#a78bfa" font-size="11" font-weight="700">目标项目 Markdown 事实源</text>
+  <text x="1013" y="612" fill="#a78bfa" font-size="11" font-weight="700">目标项目文档与证据入口</text>
   <rect x="1025" y="640" width="430" height="85" rx="7" fill="#0f172a"/>
   <rect x="1025" y="640" width="430" height="85" rx="7" fill="rgba(76,29,149,0.4)" stroke="#a78bfa" stroke-width="1.5"/>
   <text x="1240" y="669" fill="#f8fafc" font-size="9.5" font-weight="600" text-anchor="middle">CLAUDE · MAP · STATUS · LOG · ARCHITECTURE</text>
   <text x="1240" y="690" fill="#f8fafc" font-size="9.5" font-weight="600" text-anchor="middle">CONTEXT · ADR · CONTRACT · TESTS · REGRESSION</text>
-  <text x="1240" y="709" fill="#94a3b8" font-size="8" text-anchor="middle">每个事实只有一个当前拥有者</text>
+  <text x="1240" y="709" fill="#94a3b8" font-size="8" text-anchor="middle">字段 → 机器契约 · 执行结论 → 版本与运行证据</text>
   <text x="1240" y="754" fill="#64748b" font-size="8" text-anchor="middle">.governance/ 仅保存可重建派生索引</text>
 
   <!-- Runtime flow -->
@@ -180,11 +180,11 @@
   <rect x="445" y="1247" width="16" height="16" rx="3" fill="rgba(6,78,59,0.4)" stroke="#34d399"/>
   <text x="469" y="1260" fill="#cbd5e1" font-size="8">确定性执行</text>
   <rect x="635" y="1247" width="16" height="16" rx="3" fill="rgba(76,29,149,0.4)" stroke="#a78bfa"/>
-  <text x="659" y="1260" fill="#cbd5e1" font-size="8">Markdown 事实源</text>
+  <text x="659" y="1260" fill="#cbd5e1" font-size="8">项目文档与证据</text>
   <rect x="855" y="1247" width="16" height="16" rx="3" fill="rgba(136,19,55,0.28)" stroke="#fb7185"/>
   <text x="879" y="1260" fill="#cbd5e1" font-size="8">未决邻接能力</text>
   <line x1="1080" y1="1255" x2="1125" y2="1255" stroke="#22d3ee" stroke-width="2" marker-end="url(#arrow-cyan)"/>
   <text x="1140" y="1260" fill="#cbd5e1" font-size="8">依赖或运行流转</text>
 
-  <text x="1520" y="1295" fill="#475569" font-size="8" text-anchor="end">当前事实入口：ARCHITECTURE.md · 2026-08-13</text>
+  <text x="1520" y="1295" fill="#475569" font-size="8" text-anchor="end">当前事实入口：ARCHITECTURE.md · 2026-09-05</text>
 </svg>

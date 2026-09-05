@@ -4,19 +4,14 @@
 from __future__ import annotations
 
 import argparse
-import hashlib
 import os
 from pathlib import Path
 import re
 import sqlite3
 import tempfile
-from dataclasses import dataclass
+from logformat import Entry, LogFormatError, parse_entries
 
 
-ENTRY_RE = re.compile(
-    r"^## \[(?P<date>\d{4}-\d{2}-\d{2})\]\s+(?P<type>[^|\n]+?)\s*\|\s*(?P<summary>[^\n]+)$",
-    re.MULTILINE,
-)
 PATH_RE = re.compile(r"`([^`\n]+/[^`\n]+)`")
 TEST_RE = re.compile(r"\bTEST-[A-Z0-9][A-Z0-9-]*\b", re.IGNORECASE)
 COMMIT_RE = re.compile(r"(?<![0-9a-f])(?:[0-9a-f]{7,40})(?![0-9a-f])", re.IGNORECASE)
@@ -25,45 +20,6 @@ CONTRACT_RE = re.compile(r"\bCONTRACT\.md\b", re.IGNORECASE)
 ARCHIVE_NOTE = "> 历史归档见 `PROJECT_LOG.archive.md`；`.governance/project-log.sqlite` 只是可重建索引。"
 ARCHIVE_PREAMBLE = "# PROJECT_LOG.archive.md —— 历史归档（原始事件，只追加）\n\n"
 
-
-@dataclass(frozen=True)
-class Entry:
-    event_date: str
-    event_type: str
-    summary: str
-    content: str
-    source_file: str
-    source_line: int
-
-    @property
-    def entry_hash(self) -> str:
-        return hashlib.sha256(self.content.encode("utf-8")).hexdigest()
-
-
-def parse_entries(text: str, source_file: str) -> tuple[str, list[Entry]]:
-    for line in text.splitlines():
-        if re.match(r"^(?:#{1,6}\s*)?\[\d{4}-\d{2}-\d{2}\].*\|", line) and not ENTRY_RE.fullmatch(line):
-            raise SystemExit(f"{source_file} 日志事件格式错误：应使用 ## [日期] 类型 | 摘要")
-    matches = list(ENTRY_RE.finditer(text))
-    if not matches:
-        return text.rstrip() + "\n", []
-
-    preamble = text[: matches[0].start()].rstrip() + "\n"
-    entries: list[Entry] = []
-    for index, match in enumerate(matches):
-        end = matches[index + 1].start() if index + 1 < len(matches) else len(text)
-        content = text[match.start() : end].strip() + "\n"
-        entries.append(
-            Entry(
-                event_date=match.group("date"),
-                event_type=match.group("type").strip().lower(),
-                summary=match.group("summary").strip(),
-                content=content,
-                source_file=source_file,
-                source_line=text.count("\n", 0, match.start()) + 1,
-            )
-        )
-    return preamble, entries
 
 
 def load_entries(path: Path) -> tuple[str, list[Entry]]:
@@ -257,8 +213,11 @@ def main() -> int:
     if not log_path.exists():
         raise SystemExit(f"缺少 {log_path}")
 
-    preamble, active = load_entries(log_path)
-    archive_preamble, archived = load_entries(archive_path)
+    try:
+        preamble, active = load_entries(log_path)
+        archive_preamble, archived = load_entries(archive_path)
+    except LogFormatError as exc:
+        raise SystemExit(str(exc)) from exc
     if args.action == "status":
         command_status(active, args.threshold)
     elif args.action == "rebuild":

@@ -11,7 +11,7 @@
 | 新增、删除、改名顶层目录或核心 Module | `CLAUDE_MAP.md` 路径与入口；`ARCHITECTURE.md`（若已启用）的 Module 权责、依赖图与相关核心流转；`PROJECT_LOG.md` 追加结构变更 |
 | 新增入口文件、命令、脚本、服务端口 | `CLAUDE_MAP.md` 入口表；README 运行说明；`PROJECT_LOG.md` 追加 |
 | 新增或改变测试方式 | `PROJECT_STATUS.md` 测试健康指标；`CLAUDE.md` 验证硬规则（仅当成为长期规则）；`PROJECT_LOG.md` 追加 |
-| 指标越过阈值（行数、覆盖率、测试缺失、依赖风险） | `PROJECT_STATUS.md` 指标与 P0/P1 行动；`PROJECT_LOG.md` 追加 audit/fix |
+| 指标越过阈值（行数、覆盖率、测试缺失、依赖风险） | 核对实际影响，按 Skill 的风险规则更新 `PROJECT_STATUS.md`；有意义的发现或处置结果才记入 `PROJECT_LOG.md`，不按单一数值自动定为 P0 |
 | 故意删除文件、废弃模块、清理备份目录 | `PROJECT_STATUS.md` 删除区（路径、原因、日期、替代物）；`PROJECT_LOG.md` 追加 cleanup |
 | 新增硬规则、编码约束、不可违背流程 | `CLAUDE.md`；必要时链接到 docs；`PROJECT_LOG.md` 追加 governance |
 | README、docs、代码结构互相矛盾 | 修正当前真相所在文件；不要只在 LOG 里解释；`PROJECT_LOG.md` 可追加 audit/fix |
@@ -34,7 +34,7 @@
 | `CLAUDE.md` | 本次是否产生长期硬规则？是否有细节应挪到 MAP/STATUS/LOG？ |
 | `CLAUDE_MAP.md` | 新人是否能从这里找到入口、测试、关键文件和 `ARCHITECTURE.md`？是否避免复制架构正文？ |
 | `ARCHITECTURE.md`（可选） | Module 权责、状态归属、代码依赖图和运行时核心流转是否与真实代码一致？ |
-| `PROJECT_STATUS.md` | 当前风险、健康指标、待删区是否反映真实状态？指标是否量过？ |
+| `PROJECT_STATUS.md` | 当前风险、健康指标、待删区是否有来源？验证版本、环境和范围是否匹配，相关变化后是否标待复验？ |
 | `PROJECT_LOG.md` | 本次有意义的变更是否追加一行？是否避免改旧历史？ |
 | `CONTRACT.md` | 是否登记唯一机器契约、版本和生成/校验入口，字段是否只在机器契约定义？ |
 | `CONTEXT.md`（可选） | 是否只写稳定领域语言，且与代码/契约证据一致？ |
@@ -49,7 +49,7 @@
 3. 对每份治理文件判断：已同步 / 需要更新 / 需要用户确认。
 4. 能确定的当前真相直接更新；不能确定的列入交付摘要的"待确认"。
 5. 故意删除或废弃的东西必须进 `PROJECT_STATUS.md` 删除区，避免下个 agent 重建。
-6. 最后追加 `PROJECT_LOG.md`，记录这次同步本身或本次阶段成果。
+6. 最后按需追加 `PROJECT_LOG.md`，记录本次有意义的阶段成果和理由；重复核对且没有新结果时不另记一条。
 7. 若有变更影响分析，对照实际 diff，报告超范围改动、未验证项和临时兼容逻辑。
 
 ## 不要做

@@ -52,23 +52,23 @@ python -m pip install -r requirements-dev.txt
 
 - 状态：已覆盖
 - 用途：规则保护、回归保护
-- 来源：`skills/living-docs-governance/SKILL.md` 的“便宜层先判”规则；2026-08-13 发现的 TEST-ID 误识别和删除区越界两项 Bug
+- 来源：`skills/living-docs-governance/SKILL.md` 的“便宜层先判”规则及 `references/audit-result-format.md` 的结果接口；2026-08-13 发现的 TEST-ID 误识别和删除区越界两项 Bug
 - 模拟输入：临时项目中的断链、漏登记 ADR、未登记 TEST-ID、ARCHITECTURE 路径断裂、LOG 归档、示例 TEST-ID 和 P0 中的现存路径
-- 业务预期：确定性违规退出码非 0；合法文档退出码为 0；历史事件原样进入归档时仍判为只追加
+- 业务预期：文档违规退出码 1，执行失败为 2，无确定性失败或执行错误为 0；文字与 JSON 复用同一结果，未验证及提示保持可识别；历史事件原样进入归档时仍判为只追加
 - 层级：集成
 - 执行组：Python 测试
 - 边界：真实文件系统和 Git；不调用外部网络
 - 测试文件：`tests/test_audit_docs.py`
 - 测试节点：`AuditDocsTest`
 - 执行命令：`python3 -m unittest tests.test_audit_docs -v`
-- 证据：2026-09-05 使用真实 STATUS 模板复现删除区漏报/替代物误报、提交后历史改写、可选桥接误报和引用式断链；新增回归测试及独立目录审计。
+- 证据：2026-09-05 使用真实 STATUS 模板复现删除区漏报/替代物误报、提交后历史改写、可选桥接误报和引用式断链；增加独立目录审计、JSON / Shell 结果、Git 上下文、读取失败、日志来源行号，以及损坏 Git、子项目基线和循环链接回归，见 `docs/audits/2026-09-05-shared-audit-results.md`。
 
 ### TEST-LOG-001：日志索引可重建且受控归档不丢事件
 
 - 状态：已覆盖
 - 用途：规则保护、回归保护
 - 来源：`docs/adr/0001-project-log-sqlite-index.md`
-- 模拟输入：20、201 条日志事件，含路径和 TEST-ID 引用
+- 模拟输入：20、201 条日志事件，含路径、TEST-ID 引用及多行中文和代码块详情
 - 业务预期：按标准格式事件计数；错误事件格式失败且原文不变；重复重建幂等；未确认不归档；确认后活跃与归档事件合计不变
 - 层级：集成
 - 执行组：Python 测试
@@ -76,7 +76,7 @@ python -m pip install -r requirements-dev.txt
 - 测试文件：`tests/test_project_log_index.py`
 - 测试节点：`ProjectLogIndexTest`
 - 执行命令：`python3 -m unittest tests.test_project_log_index -v`
-- 证据：2026-09-05 实跑通过，见 `docs/audits/2026-09-05-governance-fixes.md`
+- 证据：2026-09-05 实跑通过，新增真实 Git 基线下多行事件归档后完整性审计，见 `docs/audits/2026-09-05-shared-audit-results.md`
 
 ### TEST-REVIEW-001：双 Agent 评审只在正文变化后重新运行
 

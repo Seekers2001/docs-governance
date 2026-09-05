@@ -65,6 +65,8 @@ Task-level engineering skills help an agent perform one piece of work well. docs
 
 docs-governance treats project documentation as a small system with one owner per fact, graded reading instead of loading everything every session, and read-only checks before edits.
 
+For tooling, `bash scripts/audit-cheap.sh full --format json` returns the same audit results with scope, Git context, statuses, and evidence. See the [audit result interface](references/audit-result-format.md) for exit codes and verification limits.
+
 ## Evidence and safety boundaries
 
 - Audits are read-only by default.

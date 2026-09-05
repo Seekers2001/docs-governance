@@ -10,6 +10,9 @@ Thanks for helping improve a small, evidence-oriented governance plugin.
 4. Run the verification suite:
 
    ```bash
+   python3 -m venv .venv
+   source .venv/bin/activate
+   python -m pip install -r requirements-dev.txt
    bash scripts/verify.sh
    ```
 

@@ -46,11 +46,11 @@ done
 
 echo "[5] 路径式引用存在"
 REF_PATTERN='(templates|references)/[A-Za-z0-9._-]+\.md|skills/[A-Za-z0-9._-]+/SKILL\.md|scripts/[A-Za-z0-9._-]+\.(py|sh)|docs/adr/[A-Za-z0-9._-]+\.md'
-grep -rhoE "$REF_PATTERN" agents/ skills/ commands/ README.md 使用说明.md CLAUDE.md CLAUDE_MAP.md docs/adr 2>/dev/null | sort -u | while read -r ref; do
+grep -rhoE "$REF_PATTERN" agents/ skills/ commands/ README.md 使用说明.md CLAUDE.md CLAUDE_MAP.md ARCHITECTURE.md docs/adr 2>/dev/null | sort -u | while read -r ref; do
   [ -f "$ref" ] && ok "$ref" || bad "$ref 被引用但不存在"
 done
 # 子 shell 里的 FAIL 不外传，单独复核第 5 项
-MISS=$(grep -rhoE "$REF_PATTERN" agents/ skills/ commands/ README.md 使用说明.md CLAUDE.md CLAUDE_MAP.md docs/adr 2>/dev/null | sort -u | while read -r ref; do [ -f "$ref" ] || echo "$ref"; done)
+MISS=$(grep -rhoE "$REF_PATTERN" agents/ skills/ commands/ README.md 使用说明.md CLAUDE.md CLAUDE_MAP.md ARCHITECTURE.md docs/adr 2>/dev/null | sort -u | while read -r ref; do [ -f "$ref" ] || echo "$ref"; done)
 [ -n "$MISS" ] && FAIL=1
 
 echo "[6] 每个 skill 有 SKILL.md / 每个 command 与 agent 是 .md"
@@ -67,6 +67,9 @@ for pattern in ("scripts/*.py", "tests/*.py"):
 ' 2>/dev/null && ok "Python compile" || bad "Python 脚本编译失败"
 
 echo "[9] 单元测试"
+if ! python3 -c 'import jsonschema, openapi_spec_validator' 2>/dev/null; then
+  bad "缺少开发测试依赖：激活虚拟环境后运行 python -m pip install -r requirements-dev.txt"
+fi
 python3 -m unittest discover -s tests -p 'test_*.py' >/tmp/docs-governance-unittest.log 2>&1
 TEST_EXIT=$?
 if [ "$TEST_EXIT" -eq 0 ]; then
@@ -75,6 +78,9 @@ else
   bad "unit tests 失败"
   sed 's/^/      /' /tmp/docs-governance-unittest.log
 fi
+
+echo "[10] 当前文档与日志历史审计"
+bash scripts/audit-cheap.sh full && ok "full 文档审计" || bad "full 文档审计失败"
 
 echo ""
 if [ "$FAIL" -eq 0 ]; then echo "✅ verify 通过：插件结构完整，无断链。"; else echo "❌ verify 失败：见上面 ✗。"; fi

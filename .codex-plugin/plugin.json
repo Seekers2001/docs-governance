@@ -1,7 +1,7 @@
 {
   "name": "docs-governance",
   "version": "0.7.0",
-  "description": "面向 Claude Code、Codex 与 ChatGPT 的文档治理插件：活文档、领域上下文、ADR、变更影响、契约、测试、回归与结构化日志索引。",
+  "description": "面向长期 AI 协作项目的知识、决策与验证治理插件，把 Agent 的一次性工作沉淀为可继承、可验证、可持续演进的项目能力。",
   "author": {
     "name": "Seekers2001",
     "email": "jiaxinleifm@outlook.com",
@@ -25,8 +25,8 @@
   "skills": "./skills/",
   "interface": {
     "displayName": "Docs Governance",
-    "shortDescription": "治理项目知识、决策、影响与验证证据",
-    "longDescription": "用薄脊柱、领域上下文、ADR、变更影响、契约、测试与回归证据治理长期 AI 协作项目，并为大型日志建立可重建索引。",
+    "shortDescription": "沉淀可继承、可验证的项目能力",
+    "longDescription": "通过活文档、领域上下文、ADR、变更影响、契约、测试与回归证据，把优秀 Agent 的一次性工作沉淀为后续 Agent 可继承、可验证、可持续演进的项目集体能力。",
     "developerName": "Seekers2001",
     "category": "Productivity",
     "capabilities": [
@@ -35,6 +35,7 @@
     ],
     "websiteURL": "https://github.com/Seekers2001/docs-governance",
     "defaultPrompt": [
+      "把这次完成的工作沉淀成后续 Agent 可继承、可验证的项目能力。",
       "用 $docs-governance 判断当前项目该启用哪些治理能力。",
       "审计当前项目的治理文档是否已经漂移。",
       "分析这项变更会影响哪些代码、契约、测试、文档和回滚路径。",

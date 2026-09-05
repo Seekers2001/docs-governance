@@ -19,3 +19,12 @@
 ## [2026-08-02] feat | 新增 Codex/ChatGPT 插件 manifest 与 AGENTS.md 薄桥接；共用现有 skills，补 Codex 直接调用、宿主 agent 降级、双端安装说明和 manifest 一致性校验
 ## [2026-08-02] feat | 文档治理 v0.7：新增总路由、CONTEXT/ADR、变更影响、五范围只读审计与 PROJECT_LOG 超 200 事件后的 Markdown 归档 + SQLite 可重建索引；12 个单测覆盖关键确定性行为
 ## [2026-08-13] docs | 面向公开试用补英文概览、三分钟只读审计路径与贡献模板；不新增方法论，外部协作仍以现有 Skill 为唯一源
+## [2026-08-13] feat | CLAUDE_MAP 增加按需 Module 架构契约：权责与状态归属、代码依赖图和独立核心流转图，并接入治理、审计、变更影响与同步流程
+## [2026-08-13] refactor | 根据评审将 Module 架构契约从 CLAUDE_MAP 下沉到独立 ARCHITECTURE.md；MAP 仅留导航，新增模板、审计载体检查与真实项目自治理示例
+## [2026-08-13] test | 本插件首次建立 TESTS.md，记录测试资产、存在理由、6 个 TEST-ID 与缺口；修复 TEST-ID/删除区两类审计误报，15 个单测通过并接入 GitHub Actions
+## [2026-08-13] audit | governance-init 在临时空仓完成 Codex 共享流程首跑与首提；Claude Code 原生命令仍待明确的数据出境授权
+## [2026-08-13] docs | 重绘 diagram/architecture.svg 与 2x PNG，使双宿主、总路由、7 个专项 Skill、确定性执行和 Markdown 事实源与 ARCHITECTURE.md 一致
+## [2026-08-14] docs | 明确 docs-governance 产品定位：把优秀 Agent 的一次性工作沉淀为可继承、可验证、可持续演进的项目集体能力；同步总路由、双语 README、使用说明和双端 manifest
+
+## [2026-09-05] fix | 修复评审并发写回、删除区判定、日志基线与格式、引用式链接及可选载体审计；共享流程归 Skill，机器契约模板与开发验证接入；28 个测试通过，证据见 [本轮验证](docs/audits/2026-09-05-governance-fixes.md)
+## [2026-09-05] governance | 标准变更：日志仅比较 HEAD → 提交审查必须指定基线；日志格式统一为带二级标题的事件；CONTRACT 手写字段 → 登记唯一机器契约；默认 verify 增加 full 审计与契约模板验证，原因是本轮已复现的漏检和双源风险

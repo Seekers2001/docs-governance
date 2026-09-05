@@ -3,37 +3,8 @@ description: 只读审计当前项目的文档治理质量与产物链接完整�
 argument-hint: "[spine|context|adr|artifacts|full，默认 full]"
 ---
 
-对当前工作目录做一次**只读文档治理审计**。铁律：**永远从最便宜的判定层开始，失败就短路**——确定性检查一个脚本秒出退出码，轮不到大模型；别拿劳斯莱斯买菜。
+读取 `skills/living-docs-governance/SKILL.md`，执行“只读审计”模式。
 
-**第一步 · 便宜层（确定性脚本，必须先跑）**：
+用户参数：`$ARGUMENTS`。将参数作为该模式定义的项目信息、范围或阶段说明传入；规则与读写边界以 Skill 为唯一来源。
 
-```bash
-bash <插件目录>/scripts/audit-cheap.sh <scope>
-```
-
-范围：`spine`（四件套/删除区/LOG）、`context`、`adr`、`artifacts`（Markdown 链接、TEST-ID、孤儿文档）、`full`。它检查路径与链接断裂、ADR 索引、LOG 活跃+归档的只追加完整性、>200 条触发、派生数据库误提交、删除区复活和跨文档 TEST-ID 断链。
-
-- **退出码 1（红）→ 短路**：直接把脚本输出整理成审计报告交给用户，**不要调用 docs-auditor**——确定性问题先修，修完再来。
-- **退出码 0（绿）→ 进第二步**。
-
-**第二步 · 贵层（LLM 裁判，只判机器判不了的模糊问题）**：
-
-调用 **docs-auditor** 子 agent，只聚焦机器判不了的问题：CONTEXT 边界与术语冲突、ADR 决策冲突、过期/归档文档是否被当当前真相、Spec/Issue/代码/TEST-ID/评审是否闭环、STATUS 指标证据、脊柱越界与重复真相。**便宜层已经查过的不要重复查。**
-
-用户参数（可选）：`$ARGUMENTS`
-- 不带参数：使用 `full`。
-- 带范围：只审对应范围；语义层也只看相关问题。
-- 带具体路径或 `contract`：在所选范围外再重点核对该对象，但仍保持只读。
-
-执行要求：
-
-1. 只读扫描，不修改任何文件。
-2. 先检查 `CLAUDE.md` / `CLAUDE_MAP.md` / `PROJECT_STATUS.md` / `PROJECT_LOG.md` 是否存在；不存在就报告缺失，不要创建。
-3. 抽查 `CLAUDE_MAP.md` 里的路径是否真实存在。
-4. 检查 `PROJECT_STATUS.md` 的指标是否像是实际量过；无法验证就标“未验证”。
-5. 检查 `PROJECT_LOG.md` 是否保持历史流水账职责。
-6. 如存在 `CONTRACT.md`，检查其是否和前后端接口位置形成单一真相源。
-7. 如存在 `AGENTS.md`，检查它是否只桥接共享 `CLAUDE.md`；不得复制章程或 MAP。
-8. 外部 Issue Tracker 不可用时，把相关状态写成“未验证”，不猜任务是否完成。
-9. 输出审计报告：总体结论、P0/P1/P2 发现、证据、建议、待人工确认项。
-10. 默认只在回复中输出；只有用户明确要求保存，才写入 `docs/audits/YYYY-MM-DD-*.md`。
+Claude Code 可由 **docs-auditor** 承担该模式；传入目标项目根目录、参数与已有验证证据，不复制流程。

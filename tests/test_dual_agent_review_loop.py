@@ -42,6 +42,7 @@ class DualAgentReviewLoopTest(unittest.TestCase):
         env["CLAUDE_BIN"] = str(self.bin_dir / "claude")
         env["CODEX_BIN"] = str(self.bin_dir / "codex")
         env["CALLS_FILE"] = str(self.calls)
+        env["REVIEW_DOCUMENT"] = str(self.document)
         return subprocess.run(
             [sys.executable, str(SCRIPT), str(self.document), *extra],
             text=True,
@@ -76,6 +77,32 @@ class DualAgentReviewLoopTest(unittest.TestCase):
             (self.project / ".git" / "dual-agent-review-proposal.json").read_text(encoding="utf-8")
         )
         self.assertEqual(state["status"], "双方通过")
+
+    def test_edit_during_review_is_preserved_and_retried(self):
+        fake = self.bin_dir / "codex"
+        fake.write_text(
+            '#!/bin/sh\nprintf "# 用户保存的新正文\\n" > "$REVIEW_DOCUMENT"\n'
+            'printf "VERDICT: PASS\\n通过\\n"\n', encoding="utf-8"
+        )
+        result = self.run_loop()
+        self.assertNotEqual(result.returncode, 0)
+        self.assertEqual(self.document.read_text(encoding="utf-8"), "# 用户保存的新正文\n")
+        self.assertIn("正文已变化", result.stderr)
+        self.assertFalse((self.project / ".git/dual-agent-review-proposal.json").exists())
+        self._write_fake("codex", "通过")
+        retried = self.run_loop()
+        self.assertEqual(retried.returncode, 0, retried.stderr)
+        self.assertIn("# 用户保存的新正文", self.document.read_text(encoding="utf-8"))
+
+    def test_document_deleted_during_review_is_not_recreated(self):
+        (self.bin_dir / "codex").write_text(
+            '#!/bin/sh\nrm "$REVIEW_DOCUMENT"\nprintf "VERDICT: PASS\\n通过\\n"\n',
+            encoding="utf-8",
+        )
+        result = self.run_loop()
+        self.assertNotEqual(result.returncode, 0)
+        self.assertFalse(self.document.exists())
+        self.assertFalse((self.project / ".git/dual-agent-review-proposal.json").exists())
 
 
 if __name__ == "__main__":

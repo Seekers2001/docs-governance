@@ -14,4 +14,8 @@ case "$SCOPE" in
     ;;
 esac
 
-python3 "$PLUGIN_ROOT/scripts/audit-docs.py" --root "$TARGET_ROOT" --scope "$SCOPE"
+AUDIT_ARGS=(--root "$TARGET_ROOT" --scope "$SCOPE")
+if [ -n "${DOCS_GOVERNANCE_BASE_REF:-}" ]; then
+  AUDIT_ARGS+=(--base-ref "$DOCS_GOVERNANCE_BASE_REF")
+fi
+python3 "$PLUGIN_ROOT/scripts/audit-docs.py" "${AUDIT_ARGS[@]}"

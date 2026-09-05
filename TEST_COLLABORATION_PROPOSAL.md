@@ -1,3 +1,5 @@
+<!-- test-id-audit: examples-only -->
+
 # 测试清单与测试开发协作方案
 
 > 状态：2026-07-12 §20 最终复审 PASS；v1 已实现（skill + TESTS 模板 + 判定点职责迁移），下一步只剩真实项目试点。§16 的 PASS 和历史 CHANGES_NEEDED 保留作评审证据。

@@ -59,7 +59,7 @@ note: 派生后归项目自管；模板更新不会自动覆盖已派生项目�
 | 项目对外说明 / 安装运行 | README.md |
 | 模块需求 / 验收标准 | docs/{模块}-spec.md |
 | 模块技术方案 / 已知坑 | docs/{模块}-plan.md |
-| 关键架构决策记录 | docs/adr/{日期}-{决策}.md |
+| 关键架构决策记录 | docs/adr/{四位编号}-{决策}.md（索引见 docs/adr/README.md） |
 | 已完成模块归档 | docs/archive/ |
 
 原则：CLAUDE.md 不复读 docs/ 内容，只放指路牌；AGENTS.md 不复制 CLAUDE.md 内容。

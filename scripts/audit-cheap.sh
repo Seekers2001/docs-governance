@@ -5,11 +5,12 @@ set -uo pipefail
 PLUGIN_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 TARGET_ROOT="${DOCS_GOVERNANCE_ROOT:-$PWD}"
 SCOPE="${1:-full}"
+[ "$#" -gt 0 ] && shift
 
 case "$SCOPE" in
   spine|context|adr|artifacts|full) ;;
   *)
-    echo "用法：bash audit-cheap.sh [spine|context|adr|artifacts|full]"
+    echo "用法：bash audit-cheap.sh [spine|context|adr|artifacts|full] [--format text|json]"
     exit 2
     ;;
 esac
@@ -18,4 +19,4 @@ AUDIT_ARGS=(--root "$TARGET_ROOT" --scope "$SCOPE")
 if [ -n "${DOCS_GOVERNANCE_BASE_REF:-}" ]; then
   AUDIT_ARGS+=(--base-ref "$DOCS_GOVERNANCE_BASE_REF")
 fi
-python3 "$PLUGIN_ROOT/scripts/audit-docs.py" "${AUDIT_ARGS[@]}"
+python3 "$PLUGIN_ROOT/scripts/audit-docs.py" "${AUDIT_ARGS[@]}" "$@"

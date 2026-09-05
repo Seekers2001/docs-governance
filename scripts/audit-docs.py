@@ -4,19 +4,20 @@
 from __future__ import annotations
 
 import argparse
+from dataclasses import asdict, dataclass
+from datetime import datetime, timezone
+import json
 from pathlib import Path
 import re
 import subprocess
 import sys
 from urllib.parse import unquote
 
+from logformat import LogFormatError, parse_entries
+
 
 SPINE = ("CLAUDE.md", "CLAUDE_MAP.md", "PROJECT_STATUS.md", "PROJECT_LOG.md")
 OPTIONAL_CARRIERS = ("AGENTS.md", "ARCHITECTURE.md", "CONTEXT.md", "CONTRACT.md", "TESTS.md", "REGRESSION.md")
-ENTRY_RE = re.compile(
-    r"^## \[(?P<date>\d{4}-\d{2}-\d{2})\]\s+(?P<type>[^|\n]+?)\s*\|\s*(?P<summary>[^\n]+)$",
-    re.MULTILINE,
-)
 LINK_DESTINATION = r'(<[^>\n]+>|(?:\\.|[^\s()]|\([^()]*\))+)'
 MARKDOWN_LINK_RE = re.compile(r'\[[^\]\n]*\]\(\s*' + LINK_DESTINATION + r'(?:\s+["\'][^\n]*?["\'])?\s*\)')
 REFERENCE_LINK_RE = re.compile(r'^ {0,3}\[[^\]\n]+\]:\s*' + LINK_DESTINATION, re.MULTILINE)
@@ -30,22 +31,72 @@ IGNORED_DIRS = {".git", ".governance", ".venv", "node_modules", "vendor", "__pyc
 IGNORED_REFERENCE_MARKERS = ("*", "{", "}", "<", ">", "…", "...")
 
 
+@dataclass(frozen=True)
+class Finding:
+    check: str
+    status: str
+    scope: str
+    message: str
+    path: str | None
+    line: int | None
+    evidence: dict
+
+
 class Report:
-    def __init__(self) -> None:
-        self.failures = 0
+    def __init__(self, root: Path, scope: str, requested_base_ref: str | None) -> None:
+        self.root = root
+        self.scope = scope
+        self.requested_base_ref = requested_base_ref
+        self.base_ref: str | None = None
+        self.head_commit: str | None = None
+        self.worktree_dirty: bool | None = None
+        self.findings: list[Finding] = []
+        self.current_scope = scope
 
-    def section(self, title: str) -> None:
-        print(f"\n[{title}]")
+    def add(self, check: str, status: str, message: str, *, path: str | None = None,
+            line: int | None = None, evidence: dict | None = None) -> None:
+        self.findings.append(Finding(check, status, self.current_scope, message, path, line, evidence or {}))
 
-    def ok(self, message: str) -> None:
-        print(f"  ✓ {message}")
+    def result(self) -> dict:
+        counts = {status: sum(item.status == status for item in self.findings)
+                  for status in ("error", "fail", "unverified", "warning", "pass")}
+        status = next((status for status, count in counts.items() if count), "unverified")
+        return {
+            "schema_version": 1,
+            "root": str(self.root),
+            "scope": self.scope,
+            "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+            "requested_base_ref": self.requested_base_ref,
+            "base_ref": self.base_ref,
+            "head_commit": self.head_commit,
+            "worktree_dirty": self.worktree_dirty,
+            "status": status,
+            "exit_code": 2 if counts["error"] else 1 if counts["fail"] else 0,
+            "counts": counts,
+            "findings": [asdict(item) for item in self.findings],
+        }
 
-    def warn(self, message: str) -> None:
-        print(f"  ⚠ {message}")
-
-    def fail(self, message: str) -> None:
-        self.failures += 1
-        print(f"  ✗ {message}")
+    def render(self, output_format: str) -> int:
+        result = self.result()
+        if output_format == "json":
+            print(json.dumps(result, ensure_ascii=False, indent=2))
+        else:
+            previous_scope = None
+            symbols = {"pass": "✓", "warning": "⚠", "unverified": "?", "fail": "✗", "error": "!"}
+            for item in self.findings:
+                if item.scope != previous_scope:
+                    print(f"\n[{item.scope}]")
+                    previous_scope = item.scope
+                stream = sys.stderr if item.status == "error" else sys.stdout
+                print(f"  {symbols[item.status]} {item.message}", file=stream)
+            print()
+            if result["exit_code"] == 2:
+                print("✗ 审计未完成：检查执行失败，不能据此判断文档是否通过。", file=sys.stderr)
+            elif result["exit_code"] == 1:
+                print(f"✗ 确定性审计失败：{result['counts']['fail']} 项。先修问题，再进入语义审计。")
+            else:
+                print("✓ 确定性审计未发现失败项；警告与未验证项需人工判断，可继续语义审计。")
+        return result["exit_code"]
 
 
 def markdown_files(root: Path) -> list[Path]:
@@ -58,29 +109,23 @@ def markdown_files(root: Path) -> list[Path]:
     return sorted(result)
 
 
-def event_contents(text: str) -> list[str]:
-    for line in text.splitlines():
-        if re.match(r"^(?:#{1,6}\s*)?\[\d{4}-\d{2}-\d{2}\].*\|", line) and not ENTRY_RE.fullmatch(line):
-            raise ValueError("日志事件格式错误：应使用 ## [日期] 类型 | 摘要")
-    matches = list(ENTRY_RE.finditer(text))
-    result: list[str] = []
-    for index, match in enumerate(matches):
-        end = matches[index + 1].start() if index + 1 < len(matches) else len(text)
-        result.append(text[match.start() : end].strip())
-    return result
-
-
 def git_show(root: Path, relative: str, base_ref: str | None) -> str | None:
     if base_ref is None:
+        return None
+    entry = subprocess.run(
+        ["git", "ls-tree", base_ref, "--", relative], cwd=root,
+        text=True, capture_output=True, check=True,
+    )
+    if not entry.stdout.strip():
         return None
     command = subprocess.run(
         ["git", "show", f"{base_ref}:{relative}"],
         cwd=root,
         text=True,
         capture_output=True,
-        check=False,
+        check=True,
     )
-    return command.stdout if command.returncode == 0 else None
+    return command.stdout
 
 
 def normalize_link_target(raw: str) -> str | None:
@@ -118,7 +163,7 @@ def resolve_target(root: Path, source: Path, target: str) -> Path:
 
 
 def check_markdown_links(root: Path, files: list[Path], report: Report) -> None:
-    broken: list[str] = []
+    broken: list[tuple[str, str]] = []
     for source in files:
         if "templates" in source.relative_to(root).parts:
             continue
@@ -129,12 +174,13 @@ def check_markdown_links(root: Path, files: list[Path], report: Report) -> None:
                 continue
             resolved = resolve_target(root, source, target)
             if not resolved.exists():
-                broken.append(f"{source.relative_to(root)} -> {target}")
+                broken.append((source.relative_to(root).as_posix(), target))
     if broken:
-        for item in sorted(set(broken)):
-            report.fail(f"Markdown 链接断裂：{item}")
+        for source, target in sorted(set(broken)):
+            report.add("links.local", "fail", f"Markdown 链接断裂：{source} -> {target}",
+                       path=source, evidence={"target": target})
     else:
-        report.ok("Markdown 本地链接无断链")
+        report.add("links.local", "pass", "Markdown 本地链接无断链")
 
 
 def plausible_code_path(value: str) -> bool:
@@ -150,7 +196,7 @@ def plausible_code_path(value: str) -> bool:
 
 
 def check_spine_paths(root: Path, report: Report) -> None:
-    broken: list[str] = []
+    broken: list[tuple[str, str]] = []
     for name in ("CLAUDE.md", "CLAUDE_MAP.md") + OPTIONAL_CARRIERS:
         source = root / name
         if not source.exists():
@@ -167,18 +213,19 @@ def check_spine_paths(root: Path, report: Report) -> None:
                 candidate = Path(value)
                 resolved = candidate if candidate.is_absolute() else root / candidate
                 if not resolved.exists() and value not in optional:
-                    broken.append(f"{name} -> {value}")
+                    broken.append((name, value))
     if broken:
-        for item in sorted(set(broken)):
-            report.fail(f"脊柱/载体路径不存在：{item}")
+        for name, target in sorted(set(broken)):
+            report.add("spine.paths", "fail", f"脊柱/载体路径不存在：{name} -> {target}",
+                       path=name, evidence={"target": target})
     else:
-        report.ok("脊柱与可选载体中的路径引用存在")
+        report.add("spine.paths", "pass", "脊柱与可选载体中的路径引用存在")
 
 
 def check_status_resurrection(root: Path, report: Report) -> None:
     status = root / "PROJECT_STATUS.md"
     if not status.exists():
-        report.warn("缺少 PROJECT_STATUS.md，跳过删除区检查")
+        report.add("status.deleted", "unverified", "缺少 PROJECT_STATUS.md，跳过删除区检查", path="PROJECT_STATUS.md")
         return
     text = status.read_text(encoding="utf-8")
     resurrected: list[str] = []
@@ -200,40 +247,43 @@ def check_status_resurrection(root: Path, report: Report) -> None:
                 resurrected.append(value)
     if resurrected:
         for value in sorted(set(resurrected)):
-            report.fail(f"删除区目标已复活：{value}")
+            report.add("status.deleted", "fail", f"删除区目标已复活：{value}",
+                       path="PROJECT_STATUS.md", evidence={"target": value})
     else:
-        report.ok("删除区无复活")
+        report.add("status.deleted", "pass", "删除区无复活", path="PROJECT_STATUS.md")
 
 
 def check_log(root: Path, report: Report, threshold: int, base_ref: str | None) -> None:
     active_path = root / "PROJECT_LOG.md"
     archive_path = root / "PROJECT_LOG.archive.md"
     if not active_path.exists():
-        report.warn("缺少 PROJECT_LOG.md，仍核对基准历史与现存归档")
+        report.add("log.source", "unverified", "缺少 PROJECT_LOG.md，仍核对基准历史与现存归档", path="PROJECT_LOG.md")
 
     active_text = active_path.read_text(encoding="utf-8") if active_path.exists() else ""
     archive_text = archive_path.read_text(encoding="utf-8") if archive_path.exists() else ""
-    active_events = event_contents(active_text)
-    current_events = set(active_events + event_contents(archive_text))
+    _, active_entries = parse_entries(active_text, active_path.name)
+    _, archive_entries = parse_entries(archive_text, archive_path.name)
+    current_events = {entry.content for entry in active_entries + archive_entries}
     previous_events: set[str] = set()
     for relative in ("PROJECT_LOG.md", "PROJECT_LOG.archive.md"):
         previous = git_show(root, relative, base_ref)
         if previous is not None:
-            previous_events.update(event_contents(previous))
+            _, entries = parse_entries(previous, relative)
+            previous_events.update(entry.content for entry in entries)
     missing = previous_events - current_events
     if missing:
-        report.fail(f"PROJECT_LOG 历史有 {len(missing)} 条被删除或改写，且未原样进入归档")
+        report.add("log.append-only", "fail", f"PROJECT_LOG 历史有 {len(missing)} 条被删除或改写，且未原样进入归档",
+                   path="PROJECT_LOG.md", evidence={"missing_count": len(missing)})
     elif base_ref is not None:
-        report.ok("PROJECT_LOG 活跃文件与归档合并后保持只追加")
+        report.add("log.append-only", "pass", "PROJECT_LOG 活跃文件与归档合并后保持只追加", path="PROJECT_LOG.md")
     else:
-        report.warn("无 Git 提交基准，历史只追加完整性未验证")
+        report.add("log.append-only", "unverified", "无 Git 提交基准，历史只追加完整性未验证", path="PROJECT_LOG.md")
 
-    if len(active_events) > threshold:
-        report.warn(
-            f"PROJECT_LOG 活跃事件 {len(active_events)} 条，超过 {threshold}；应先复盘，再归档并重建 SQLite 索引"
-        )
-    else:
-        report.ok(f"PROJECT_LOG 活跃事件 {len(active_events)} 条，未超过 {threshold}")
+    count = len(active_entries)
+    message = (f"PROJECT_LOG 活跃事件 {count} 条，超过 {threshold}；应先复盘，再归档并重建 SQLite 索引"
+               if count > threshold else f"PROJECT_LOG 活跃事件 {count} 条，未超过 {threshold}")
+    report.add("log.event-count", "warning" if count > threshold else "pass", message,
+               path="PROJECT_LOG.md", evidence={"count": count, "threshold": threshold})
 
     tracked = subprocess.run(
         ["git", "ls-files", "--error-unmatch", ".governance/project-log.sqlite"],
@@ -243,7 +293,8 @@ def check_log(root: Path, report: Report, threshold: int, base_ref: str | None) 
         check=False,
     )
     if tracked.returncode == 0:
-        report.fail(".governance/project-log.sqlite 是派生索引，不应提交进 git")
+        report.add("log.index-untracked", "fail", ".governance/project-log.sqlite 是派生索引，不应提交进 git",
+                   path=".governance/project-log.sqlite")
 
 
 def parse_adr_status(text: str) -> str | None:
@@ -261,40 +312,45 @@ def parse_adr_status(text: str) -> str | None:
 def check_adr(root: Path, report: Report) -> None:
     adr_dir = root / "docs" / "adr"
     if not adr_dir.exists():
-        report.warn("docs/adr/ 尚未创建；ADR 按实际决策懒创建")
+        report.add("adr.index", "unverified", "docs/adr/ 尚未创建；ADR 按实际决策懒创建", path="docs/adr")
         return
     index = adr_dir / "README.md"
     if not index.exists():
-        report.fail("docs/adr/ 存在但缺少 README.md 统一索引")
+        report.add("adr.index", "fail", "docs/adr/ 存在但缺少 README.md 统一索引", path="docs/adr/README.md")
         return
     index_text = index.read_text(encoding="utf-8")
     for raw in markdown_targets(index_text):
         target = normalize_link_target(raw)
         if target is not None and target.endswith(".md") and not resolve_target(root, index, target).exists():
-            report.fail(f"ADR 索引链接不存在：docs/adr/README.md -> {target}")
+            report.add("adr.index", "fail", f"ADR 索引链接不存在：docs/adr/README.md -> {target}",
+                       path="docs/adr/README.md", evidence={"target": target})
     adr_files = sorted(path for path in adr_dir.glob("*.md") if ADR_FILE_RE.match(path.name))
     missing_from_index = [path.name for path in adr_files if path.name not in index_text]
     for name in missing_from_index:
-        report.fail(f"ADR 未登记到统一索引：docs/adr/{name}")
+        report.add("adr.index", "fail", f"ADR 未登记到统一索引：docs/adr/{name}", path=f"docs/adr/{name}")
 
     allowed = {"proposed", "accepted", "deprecated", "superseded"}
     for path in adr_files:
         text = path.read_text(encoding="utf-8")
         status = parse_adr_status(text)
         if status is None:
-            report.fail(f"ADR 缺少可解析状态：{path.relative_to(root)}")
+            report.add("adr.status", "fail", f"ADR 缺少可解析状态：{path.relative_to(root)}", path=path.relative_to(root).as_posix())
         elif status not in allowed:
-            report.fail(f"ADR 状态不受支持：{path.relative_to(root)} -> {status}")
+            report.add("adr.status", "fail", f"ADR 状态不受支持：{path.relative_to(root)} -> {status}",
+                       path=path.relative_to(root).as_posix(), evidence={"status": status})
         supersedes = re.search(r"(?ims)^##\s+Supersedes\s*\n(?P<body>.*?)(?:\n## |\Z)", text)
         if supersedes and supersedes.group("body").strip().lower() not in {"none", "无"}:
             targets = ADR_TARGET_RE.findall(supersedes.group("body"))
             if not targets:
-                report.warn(f"ADR Supersedes 无法机械解析，需人工核对：{path.relative_to(root)}")
+                report.add("adr.supersedes", "unverified", f"ADR Supersedes 无法机械解析，需人工核对：{path.relative_to(root)}",
+                           path=path.relative_to(root).as_posix())
             for target in targets:
                 if not (adr_dir / target).exists():
-                    report.fail(f"ADR Supersedes 目标不存在：{path.relative_to(root)} -> {target}")
+                    report.add("adr.supersedes", "fail", f"ADR Supersedes 目标不存在：{path.relative_to(root)} -> {target}",
+                               path=path.relative_to(root).as_posix(), evidence={"target": target})
     if not missing_from_index and all(parse_adr_status(path.read_text(encoding="utf-8")) in allowed for path in adr_files):
-        report.ok(f"ADR 索引与 {len(adr_files)} 个决策文件一致")
+        report.add("adr.status", "pass", f"ADR 索引登记与 {len(adr_files)} 个决策文件状态检查通过",
+                   path="docs/adr/README.md", evidence={"count": len(adr_files)})
 
 
 def check_test_ids(root: Path, files: list[Path], report: Report) -> None:
@@ -311,17 +367,19 @@ def check_test_ids(root: Path, files: list[Path], report: Report) -> None:
             continue
         refs.update(value.upper() for value in TEST_ID_RE.findall(text))
     if not refs:
-        report.ok("未发现跨文档 TEST-ID 引用")
+        report.add("tests.references", "pass", "未发现跨文档 TEST-ID 引用")
         return
     if not tests_file.exists():
-        report.warn(f"发现 {len(refs)} 个具体 TEST-ID 引用，但项目未启用 TESTS.md；需人工判断是否只是方案示例")
+        report.add("tests.references", "unverified", f"发现 {len(refs)} 个具体 TEST-ID 引用，但项目未启用 TESTS.md；需人工判断是否只是方案示例",
+                   path="TESTS.md", evidence={"references": sorted(refs)})
         return
     defined = {value.upper() for value in TEST_ID_RE.findall(tests_file.read_text(encoding="utf-8"))}
     missing = refs - defined
     if missing:
-        report.fail("TEST-ID 未在 TESTS.md 登记：" + ", ".join(sorted(missing)))
+        report.add("tests.references", "fail", "TEST-ID 未在 TESTS.md 登记：" + ", ".join(sorted(missing)),
+                   path="TESTS.md", evidence={"missing": sorted(missing)})
     else:
-        report.ok("跨文档 TEST-ID 均可回到 TESTS.md")
+        report.add("tests.references", "pass", "跨文档 TEST-ID 均可回到 TESTS.md", path="TESTS.md")
 
 
 def check_orphans(root: Path, files: list[Path], report: Report) -> None:
@@ -342,34 +400,35 @@ def check_orphans(root: Path, files: list[Path], report: Report) -> None:
         ):
             orphans.append(relative)
     if orphans:
-        report.warn("疑似孤儿文档（需人工判断挂索引或归档）：" + ", ".join(orphans))
+        report.add("docs.orphans", "warning", "疑似孤儿文档（需人工判断挂索引或归档）：" + ", ".join(orphans),
+                   evidence={"candidates": orphans})
     else:
-        report.ok("docs/ 下未发现疑似孤儿文档")
+        report.add("docs.orphans", "pass", "docs/ 下未发现疑似孤儿文档")
 
 
 def check_spine(root: Path, report: Report, threshold: int, base_ref: str | None) -> None:
-    report.section("spine · 脊柱")
+    report.current_scope = "spine"
     for name in SPINE:
         if (root / name).exists():
-            report.ok(f"{name} 存在")
+            report.add("spine.carrier", "pass", f"{name} 存在", path=name)
         else:
-            report.warn(f"{name} 缺失（渐进采用时可能合理）")
+            report.add("spine.carrier", "unverified", f"{name} 缺失（渐进采用时可能合理）", path=name)
     check_spine_paths(root, report)
     check_status_resurrection(root, report)
     check_log(root, report, threshold, base_ref)
 
 
 def check_context(root: Path, report: Report) -> None:
-    report.section("context · 领域上下文")
+    report.current_scope = "context"
     context = root / "CONTEXT.md"
     if not context.exists():
-        report.warn("CONTEXT.md 未创建；没有稳定领域词汇时无需补空壳")
+        report.add("context.carrier", "unverified", "CONTEXT.md 未创建；没有稳定领域词汇时无需补空壳", path="CONTEXT.md")
         return
-    report.ok("CONTEXT.md 存在；术语边界与代码一致性留给语义层判断")
+    report.add("context.carrier", "pass", "CONTEXT.md 存在；术语边界与代码一致性留给语义层判断", path="CONTEXT.md")
 
 
 def check_artifacts(root: Path, report: Report) -> None:
-    report.section("artifacts · 产物链接")
+    report.current_scope = "artifacts"
     files = markdown_files(root)
     check_markdown_links(root, files, report)
     check_test_ids(root, files, report)
@@ -382,40 +441,62 @@ def main() -> int:
     parser.add_argument("--scope", choices=("spine", "context", "adr", "artifacts", "full"), default="full")
     parser.add_argument("--log-threshold", type=int, default=200)
     parser.add_argument("--base-ref", help="日志历史比较基准；PR 传入基线提交，本地默认 HEAD")
+    parser.add_argument("--format", choices=("text", "json"), default="text", help="输出格式；JSON 包含范围、版本信息和结构化发现")
     args = parser.parse_args()
 
     root = args.root.resolve()
+    report = Report(root, args.scope, args.base_ref)
     if not root.is_dir():
-        print(f"不是目录：{root}", file=sys.stderr)
-        return 2
-    report = Report()
-    if args.scope in ("spine", "full"):
-        baseline = subprocess.run(
-            ["git", "rev-parse", "--verify", "--end-of-options", f"{args.base_ref or 'HEAD'}^{{commit}}"],
-            cwd=root, text=True, capture_output=True, check=False,
+        report.add("audit.root", "error", f"不是目录：{root}", path=str(root))
+        return report.render(args.format)
+    try:
+        repository = subprocess.run(
+            ["git", "rev-parse", "--is-inside-work-tree"], cwd=root,
+            text=True, capture_output=True, check=False,
         )
-        if baseline.returncode and args.base_ref is not None:
-            print(f"无法解析日志比较基准：{args.base_ref}", file=sys.stderr)
-            return 2
-        base_ref = baseline.stdout.strip() if baseline.returncode == 0 else None
-        try:
-            check_spine(root, report, args.log_threshold, base_ref)
-        except ValueError as exc:
-            report.fail(str(exc))
-    if args.scope in ("context", "full"):
-        check_context(root, report)
-    if args.scope in ("adr", "full"):
-        report.section("adr · 决策记录")
-        check_adr(root, report)
-    if args.scope in ("artifacts", "full"):
-        check_artifacts(root, report)
-
-    print()
-    if report.failures:
-        print(f"✗ 确定性审计失败：{report.failures} 项。先修断链，再进入语义审计。")
-        return 1
-    print("✓ 确定性审计通过；警告项需人工判断，可继续语义审计。")
-    return 0
+        if repository.returncode == 0 and repository.stdout.strip() == "true":
+            head = subprocess.run(
+                ["git", "rev-parse", "--verify", "HEAD^{commit}"], cwd=root,
+                text=True, capture_output=True, check=False,
+            )
+            report.head_commit = head.stdout.strip() if head.returncode == 0 else None
+            status = subprocess.run(
+                ["git", "--no-optional-locks", "status", "--porcelain", "--untracked-files=normal"],
+                cwd=root, text=True, capture_output=True, check=True,
+            )
+            report.worktree_dirty = bool(status.stdout.strip())
+        if args.scope in ("spine", "full"):
+            report.current_scope = "spine"
+            if args.base_ref is not None:
+                baseline = subprocess.run(
+                    ["git", "rev-parse", "--verify", "--end-of-options", f"{args.base_ref}^{{commit}}"],
+                    cwd=root, text=True, capture_output=True, check=False,
+                )
+                if baseline.returncode:
+                    report.add("log.baseline", "error", f"无法解析日志比较基准：{args.base_ref}",
+                               evidence={"requested_ref": args.base_ref})
+                    return report.render(args.format)
+                report.base_ref = baseline.stdout.strip()
+            else:
+                report.base_ref = report.head_commit
+            try:
+                check_spine(root, report, args.log_threshold, report.base_ref)
+            except LogFormatError as exc:
+                report.add("log.format", "fail", str(exc), path=exc.source_file, line=exc.source_line)
+        if args.scope in ("context", "full"):
+            check_context(root, report)
+        if args.scope in ("adr", "full"):
+            report.current_scope = "adr"
+            check_adr(root, report)
+        if args.scope in ("artifacts", "full"):
+            check_artifacts(root, report)
+    except (OSError, UnicodeError, subprocess.SubprocessError) as exc:
+        filename = getattr(exc, "filename", None)
+        path = Path(filename) if filename else None
+        location = path.relative_to(root).as_posix() if path and path.is_relative_to(root) else str(path) if path else None
+        report.add("audit.execution", "error", f"检查执行失败：{exc}", path=location,
+                   evidence={"exception": type(exc).__name__})
+    return report.render(args.format)
 
 
 if __name__ == "__main__":

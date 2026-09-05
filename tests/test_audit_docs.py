@@ -1,4 +1,6 @@
 from pathlib import Path
+import json
+import os
 import shutil
 import subprocess
 import sys
@@ -31,6 +33,111 @@ class AuditDocsTest(unittest.TestCase):
         result = self.run_audit("artifacts")
         self.assertEqual(result.returncode, 1)
         self.assertIn("Markdown 链接断裂", result.stdout)
+
+    def test_json_reports_broken_link_with_machine_readable_evidence(self):
+        (self.project / "guide.md").write_text("[缺失](docs/missing.md)\n", encoding="utf-8")
+        text_result = self.run_audit("artifacts")
+        result = self.run_audit("artifacts", "--format", "json")
+        report = json.loads(result.stdout)
+        self.assertEqual(result.stderr, "")
+        self.assertEqual(result.returncode, text_result.returncode)
+        self.assertEqual(report["exit_code"], 1)
+        self.assertEqual(report["status"], "fail")
+        finding = next(item for item in report["findings"] if item["check"] == "links.local")
+        self.assertEqual(finding["status"], "fail")
+        self.assertEqual(finding["scope"], "artifacts")
+        self.assertEqual(finding["path"], "guide.md")
+        self.assertEqual(finding["evidence"]["target"], "docs/missing.md")
+        self.assertIn(finding["message"], text_result.stdout)
+
+    def test_json_success_is_available_through_shell_adapter(self):
+        (self.project / "guide.md").write_text("# 文档\n", encoding="utf-8")
+        result = subprocess.run(
+            ["bash", str(ROOT / "scripts/audit-cheap.sh"), "artifacts", "--format", "json"],
+            cwd=self.project, env={**os.environ, "DOCS_GOVERNANCE_ROOT": str(self.project)},
+            text=True, capture_output=True, check=False,
+        )
+        report = json.loads(result.stdout)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(report["schema_version"], 1)
+        self.assertEqual(report["status"], "pass")
+        self.assertEqual(report["scope"], "artifacts")
+        self.assertEqual(Path(report["root"]), self.project.resolve())
+        self.assertIsNone(report["head_commit"])
+        self.assertIsNone(report["worktree_dirty"])
+
+    def test_json_marks_absent_history_as_unverified_without_blocking_adoption(self):
+        result = self.run_audit("spine", "--format", "json")
+        report = json.loads(result.stdout)
+        self.assertEqual(result.returncode, 0)
+        self.assertEqual(report["status"], "unverified")
+        self.assertIsNone(report["base_ref"])
+        finding = next(item for item in report["findings"] if item["check"] == "log.append-only")
+        self.assertEqual(finding["status"], "unverified")
+
+    def test_json_distinguishes_invalid_baseline_and_root_from_document_failures(self):
+        for extra in (("--base-ref", "missing-ref"), ("--root", str(self.project / "absent"))):
+            with self.subTest(extra=extra):
+                result = self.run_audit("spine", "--format", "json", *extra)
+                report = json.loads(result.stdout)
+                self.assertEqual(result.returncode, 2)
+                self.assertEqual(report["exit_code"], 2)
+                self.assertEqual(report["status"], "error")
+                self.assertEqual(report["counts"]["fail"], 0)
+                self.assertEqual(report["counts"]["error"], 1)
+
+    def test_json_read_failure_does_not_become_a_pass(self):
+        (self.project / "guide.md").write_bytes(b"\xff\xfe")
+        result = self.run_audit("artifacts", "--format", "json")
+        report = json.loads(result.stdout)
+        self.assertEqual(result.returncode, 2)
+        self.assertEqual(report["status"], "error")
+        self.assertEqual(report["findings"][-1]["check"], "audit.execution")
+
+    def test_json_keeps_orphan_hint_separate_from_failure(self):
+        (self.project / "docs").mkdir()
+        (self.project / "docs/orphan.md").write_text("# 独立文档\n", encoding="utf-8")
+        result = self.run_audit("artifacts", "--format", "json")
+        report = json.loads(result.stdout)
+        self.assertEqual(result.returncode, 0)
+        self.assertEqual(report["status"], "warning")
+        finding = next(item for item in report["findings"] if item["check"] == "docs.orphans")
+        self.assertEqual(finding["evidence"]["candidates"], ["docs/orphan.md"])
+
+    def test_json_invalid_log_identifies_the_source_line(self):
+        (self.project / "PROJECT_LOG.md").write_text(
+            "# LOG\n\n[2026-09-05] fix | 格式错误\n", encoding="utf-8"
+        )
+        result = self.run_audit("spine", "--format", "json")
+        report = json.loads(result.stdout)
+        self.assertEqual(result.returncode, 1)
+        finding = next(item for item in report["findings"] if item["check"] == "log.format")
+        self.assertEqual(finding["path"], "PROJECT_LOG.md")
+        self.assertEqual(finding["line"], 3)
+
+    def test_json_records_git_baseline_and_uncommitted_changes(self):
+        def git(*args):
+            return subprocess.run(
+                ["git", "-c", "user.email=test@example.com", "-c", "user.name=Test", *args],
+                cwd=self.project, text=True, capture_output=True, check=True,
+            )
+        git("init")
+        log = self.project / "PROJECT_LOG.md"
+        original = "# LOG\n\n## [2026-09-05] init | 首提\n"
+        log.write_text(original, encoding="utf-8")
+        git("add", "PROJECT_LOG.md")
+        git("commit", "-m", "baseline")
+        head = git("rev-parse", "HEAD").stdout.strip()
+        for dirty in (False, True):
+            if dirty:
+                log.write_text(original + "## [2026-09-05] fix | 后续修改\n", encoding="utf-8")
+            result = self.run_audit("spine", "--base-ref", "HEAD", "--format", "json")
+            report = json.loads(result.stdout)
+            self.assertEqual(result.returncode, 0, result.stdout)
+            self.assertEqual(report["head_commit"], head)
+            self.assertEqual(report["base_ref"], head)
+            self.assertEqual(report["requested_base_ref"], "HEAD")
+            self.assertEqual(report["worktree_dirty"], dirty)
 
     def test_spine_scope_checks_architecture_paths(self):
         (self.project / "ARCHITECTURE.md").write_text(

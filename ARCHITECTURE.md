@@ -4,7 +4,7 @@
 
 ## 架构摘要
 
-插件以 `skills/` 为窄腰：Claude Code、Codex 与 ChatGPT 各自通过宿主 Adapter 进入同一套方法论，命令和 agent 不复制方法论。模板、参考和确定性脚本位于边缘，目标项目的 Markdown 始终是事实源。
+插件以 `skills/` 为窄腰：Claude Code、Codex 与 ChatGPT 各自通过宿主 Adapter 进入同一套方法论，命令和 agent 不复制方法论。规则、决策与历史保存在项目文档；接口字段以机器契约为准，执行结论以对应版本的运行证据为准。Markdown 登记这些证据的入口与解释，派生索引不替代原文。
 
 ## Module 权责与状态归属
 
@@ -14,7 +14,8 @@
 | 总路由 | 根据用户意图选择专项 Skill 和执行顺序 | 无持久状态 | `skills/docs-governance/SKILL.md` | 专项 Skill | 复制专项方法论 |
 | 专项 Skill | 保存治理方法论唯一真相 | 无运行时状态 | 各 `skills/*/SKILL.md` | 模板、参考与确定性脚本 | 宿主专用实现 |
 | 模板与参考 | 提供空白载体和同步矩阵 | 无运行时状态 | `templates/`、`references/` | 无 | 反向依赖 agent 或 command |
-| 确定性执行 | 处理断链、日志索引、结构自检、提醒和 CI | `.governance/` 只保存可重建派生状态 | `scripts/`、`hooks/`、`.github/workflows/verify.yml` | Markdown 事实源 | 把 SQLite 当事实源 |
+| 日志格式 | 统一事件识别、原文边界及格式错误 | 无持久状态 | `scripts/logformat.py` 的 `parse_entries` / `Entry` / `LogFormatError` | Python 标准库 | 文件读写、CLI 退出、审计或归档策略 |
+| 确定性执行 | 检查事实、生成结构化结果，并按需渲染文字或 JSON | 结果在本次内存中；`.governance/` 只保存可重建派生状态 | `scripts/`、`hooks/`、`.github/workflows/verify.yml` | 日志格式、项目文档、Git | 把派生索引或旧运行结果当当前事实 |
 
 ## 代码依赖图
 
@@ -26,7 +27,8 @@ flowchart LR
     SKILL --> TEMPLATE["templates"]
     SKILL --> REFERENCE["references"]
     SKILL --> SCRIPT["deterministic scripts"]
-    SCRIPT --> FACTS["Markdown facts"]
+    SCRIPT --> LOGFORMAT["shared log parser"]
+    SCRIPT --> FACTS["project documents / Git"]
     HOOK["Stop hook"] --> FACTS
     CI["GitHub Actions"] --> VERIFY["scripts/verify.sh"]
     VERIFY --> SCRIPT
@@ -43,7 +45,7 @@ flowchart LR
     ROUTE --> METHOD["读取专项 Skill"]
     METHOD --> SCAN["扫描目标项目真实证据"]
     SCAN --> MODE{"只读还是写入"}
-    MODE -->|只读| AUDIT["确定性检查 → 语义审计"]
+    MODE -->|只读| AUDIT["确定性检查 → 结构化结果 → 语义审计"]
     MODE -->|已授权写入| DOCS["生成或更新治理文档"]
     DOCS --> VERIFY["验证与阶段同步"]
     AUDIT --> REPORT["证据报告"]
@@ -61,8 +63,11 @@ flowchart LR
 | 方法论执行 | `skills/*/SKILL.md` | commands、agents、当前 Codex agent | 对应 Skill |
 | 项目文档生成 | `templates/*.example.md` | docs-governor 或当前 agent | 模板 + 对应 Skill |
 | 机器契约模板 | `templates/openapi.example.json` | CONTRACT 模板、消费方/提供方校验器 | 单一 OpenAPI 文档 |
-| 确定性审计 | `scripts/audit-cheap.sh`、`scripts/audit-docs.py` | governance-audit | 脚本退出码 |
+| 日志解析 | `scripts/logformat.py` | 文档审计、日志归档与索引 | 同一解析器，调用方决定失败处理 |
+| 确定性审计 | `scripts/audit-cheap.sh`、`scripts/audit-docs.py` | governance-audit、CI、当前 Agent | 退出码及结构化结果，见 `references/audit-result-format.md` |
 | 测试与发布前验证 | `TESTS.md`、`scripts/verify.sh` | 本地开发、GitHub Actions | TEST-ID + 命令退出码 |
+
+项目已有代码审查与测试工具继续执行各自职责。治理 Skill 引用其版本、范围、结论和证据位置；当前没有新增外部工具调度器或结果导入服务。运行结果是一次观测，相关实现变化后需要复验，不能仅凭旧报告更新当前健康为绿。
 
 现有展示版架构图在 `diagram/architecture.svg`，渲染预览为 `diagram/architecture.png`；若它与本文冲突，以本文和真实代码为准，并在同次结构变更中同步展示图。
 

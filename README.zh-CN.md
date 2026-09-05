@@ -54,7 +54,7 @@ AI 让代码变得**便宜、可丢弃、可再生**。当写代码不再是瓶�
 | `PROJECT_STATUS.md` | 健康仪表盘：指标 + 删除区 + P0 | 只有红线块常驻 |
 | `PROJECT_LOG.md` | 流水账：只追加的历史 | 按需 grep |
 
-> 关键纪律：**每个事实只活在一份文档里**（非重叠）；脊柱只放索引和指路牌，细节下沉到对应层；"不读会悄悄出事"的红线常驻，其余按需。
+> 关键纪律：**每个事实只有一个权威来源**（其他载体只引用）；脊柱只放索引和指路牌，细节下沉到对应层；"不读会悄悄出事"的红线常驻，其余按需。
 
 当项目已有多个长期 Module，单靠地图不足以说明权责与流转时，按需增加独立的 `ARCHITECTURE.md`：它集中维护 Module 权责、状态唯一归属、允许/禁止依赖、代码依赖图和运行时核心流转图。`CLAUDE_MAP.md` 只保留一行入口；难回退选择的理由仍进入 ADR，Interface 字段仍进入 CONTRACT 或代码 Interface。
 
@@ -69,6 +69,8 @@ AI 让代码变得**便宜、可丢弃、可再生**。当写代码不再是瓶�
 插件还保留 `loop-design-check`：当任务本身需要设计可判定目标、反馈回路和停止条件时使用；它由总路由登记，但不把 loop 文档混入项目治理脊柱。
 
 文档审计仍坚持“便宜层先判”：`scripts/audit-docs.py` 检查断链、ADR 索引、LOG 完整性、TEST-ID 和孤儿文档；确定性问题通过后，才由 agent 判断术语冲突、决策冲突、重复真相和成功标准证据。审计默认只读。
+
+需要工具读取结果时，使用 `bash scripts/audit-cheap.sh full --format json`；同一结果提供检查范围、Git 信息、状态和证据，详见[审计结果接口](references/audit-result-format.md)。日志审计与归档索引共用 `scripts/logformat.py` 的事件解析规则。
 
 `PROJECT_LOG.md` 按事件数治理：不超过 200 条只用 Markdown；超过后先复盘，经确认把旧事件原样归档，并生成 `.governance/project-log.sqlite` 本地派生索引。Markdown 始终是 Git 可读事实源；数据库可随时重建，也不负责项目排期。
 

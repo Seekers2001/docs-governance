@@ -1,4 +1,5 @@
 from pathlib import Path
+import json
 import sqlite3
 import subprocess
 import sys
@@ -106,6 +107,31 @@ class ProjectLogIndexTest(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(log.read_text(encoding="utf-8"), before)
         self.assertFalse((self.project / "PROJECT_LOG.archive.md").exists())
+
+    def test_archive_and_audit_agree_on_multiline_event_history(self):
+        entries = [f"## [2026-09-05] fix | 事件 {index}\n\n中文详情 {index}\n```json\n{{\"ok\": true}}\n```\n"
+                   for index in range(201)]
+        log = self.project / "PROJECT_LOG.md"
+        log.write_text("# LOG\n\n" + "\n".join(entries), encoding="utf-8")
+        for args in (("init",), ("add", "PROJECT_LOG.md"), ("commit", "-m", "baseline")):
+            subprocess.run(
+                ["git", "-c", "user.email=test@example.com", "-c", "user.name=Test", *args],
+                cwd=self.project, capture_output=True, check=True,
+            )
+        result = self.run_script("archive", "--yes")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        stored = log.read_text(encoding="utf-8") + (self.project / "PROJECT_LOG.archive.md").read_text(encoding="utf-8")
+        for entry in entries:
+            self.assertIn(entry, stored)
+        audit = subprocess.run(
+            [sys.executable, str(ROOT / "scripts/audit-docs.py"), "--root", str(self.project),
+             "--scope", "spine", "--format", "json"],
+            cwd=self.project, text=True, capture_output=True, check=False,
+        )
+        self.assertEqual(audit.returncode, 0, audit.stdout + audit.stderr)
+        findings = {item["check"]: item for item in json.loads(audit.stdout)["findings"]}
+        self.assertEqual(findings["log.append-only"]["status"], "pass")
+        self.assertEqual(findings["log.event-count"]["evidence"]["count"], 100)
 
 
 if __name__ == "__main__":

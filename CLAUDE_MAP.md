@@ -10,7 +10,7 @@
 - 改**方法论** → 只动 `skills/*/SKILL.md`，agent / command 自动继承（它们只指向、不复制）
 - 改**模板** → `templates/*.example.md`
 - 加**体检项** → `scripts/verify.sh`
-- 改日志结构化规则 → `scripts/project-log-index.py` + `docs/adr/README.md`
+- 改日志格式 → `scripts/logformat.py`；改归档与索引策略 → `scripts/project-log-index.py` + `docs/adr/README.md`
 
 ## 找 X 去哪
 
@@ -35,6 +35,8 @@
 | 结构完整性自检 | `scripts/verify.sh` |
 | 本地与 CI 测试入口 | `TESTS.md` + `.github/workflows/verify.yml` |
 | 文档确定性审计 | `scripts/audit-docs.py`（`scripts/audit-cheap.sh` 是入口） |
+| 审计结果与 JSON 接口 | `references/audit-result-format.md` |
+| 日志共享解析与格式错误 | `scripts/logformat.py`（审计和索引共用） |
 | PROJECT_LOG 归档与索引 | `scripts/project-log-index.py` |
 | 插件自身架构决策 | `docs/adr/README.md` |
 

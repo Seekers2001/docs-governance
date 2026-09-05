@@ -19,12 +19,28 @@
 | 文档问题与检查执行失败分开 | 断链或日志格式错误为 1；无效根目录、无效基准和读取失败为 2，JSON 仍可解析 |
 | 证据携带版本和范围 | 测试覆盖实际提交、干净与有未提交改动的工作区、日志基线以及具体日志行号 |
 
-默认 runner 共 37 个测试通过；原有测试继续覆盖双 Agent 写回保护、机器契约模板和独立目录审计。标准提交前入口：
+初版默认 runner 共 37 个测试通过；独立审查和复核补充四个边界回归后共 41 个。原有测试继续覆盖双 Agent 写回保护、机器契约模板和独立目录审计。标准提交前入口：
 
 ```bash
 source .venv/bin/activate
 DOCS_GOVERNANCE_BASE_REF=origin/main bash scripts/verify.sh
 ```
+
+## PR 与独立审查
+
+[PR #4](https://github.com/Seekers2001/docs-governance/pull/4) 的基础提交 `dad0dd2` 已通过 [push 验证](https://github.com/Seekers2001/docs-governance/actions/runs/33959949383)和 [PR 验证](https://github.com/Seekers2001/docs-governance/actions/runs/33959977412)。它们仅证明该提交，后续修复与合并结果按对应 checks 核对。
+
+按已有 `code-review` Skill 独立检查 Standards 和 Spec 两轴：Standards 发现 2 项接口问题，Spec 发现 2 项，其中 Git 错误分类为两轴共同发现；共 3 个不同问题已补回归并修复：
+
+- 损坏 Git config 或失效的 worktree 元数据不能当成“无 Git”，必须返回 `error/2`。
+- 子项目日志的 `ls-tree` 与 `show` 使用同一 cwd 路径语义，既能通过合法历史，也能拦截改写。
+- 循环符号链接的路径解析纳入错误边界，兼容 Python 3.12 与新版 Python，保留单一 JSON 输出。
+
+Standards 复核另外发现严格路径解析将“父路径是普通文件”的断链误判为执行错误；已补回归并保留其 `links.local / fail / 1` 结论。
+
+最终增量复核：Standards 已报告的 3 项和 Spec 已报告的 2 项均关闭，两轴无剩余阻塞。Python 3.12.13 上审计与日志测试通过，新增路径分类与循环链接用例也已定向复验。
+
+这些测试覆盖实际文件系统和 Git；架构图已渲染为 PNG 并检查文字与布局。真实业务路径验收仍遵守下述边界。
 
 ## 使用边界
 

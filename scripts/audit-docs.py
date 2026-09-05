@@ -7,6 +7,7 @@ import argparse
 from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 import json
+import os
 from pathlib import Path
 import re
 import subprocess
@@ -119,7 +120,7 @@ def git_show(root: Path, relative: str, base_ref: str | None) -> str | None:
     if not entry.stdout.strip():
         return None
     command = subprocess.run(
-        ["git", "show", f"{base_ref}:{relative}"],
+        ["git", "show", f"{base_ref}:./{relative}"],
         cwd=root,
         text=True,
         capture_output=True,
@@ -156,10 +157,18 @@ def markdown_targets(text: str) -> list[str]:
     return MARKDOWN_LINK_RE.findall(content) + REFERENCE_LINK_RE.findall(content)
 
 
+def resolve_path(path: Path) -> Path:
+    # strict 模式在各 Python 版本都报告循环链接；普通缺失路径留给文档检查判定。
+    try:
+        return path.resolve(strict=True)
+    except (FileNotFoundError, NotADirectoryError):
+        return path.resolve()
+
+
 def resolve_target(root: Path, source: Path, target: str) -> Path:
     if target.startswith("/"):
-        return Path(target)
-    return (source.parent / target).resolve()
+        return resolve_path(Path(target))
+    return resolve_path(source.parent / target)
 
 
 def check_markdown_links(root: Path, files: list[Path], report: Report) -> None:
@@ -444,16 +453,20 @@ def main() -> int:
     parser.add_argument("--format", choices=("text", "json"), default="text", help="输出格式；JSON 包含范围、版本信息和结构化发现")
     args = parser.parse_args()
 
-    root = args.root.resolve()
+    root = args.root.absolute()
     report = Report(root, args.scope, args.base_ref)
-    if not root.is_dir():
-        report.add("audit.root", "error", f"不是目录：{root}", path=str(root))
-        return report.render(args.format)
     try:
+        root = resolve_path(root)
+        report.root = root
+        if not root.is_dir():
+            report.add("audit.root", "error", f"不是目录：{root}", path=str(root))
+            return report.render(args.format)
         repository = subprocess.run(
             ["git", "rev-parse", "--is-inside-work-tree"], cwd=root,
-            text=True, capture_output=True, check=False,
+            text=True, capture_output=True, check=False, env={**os.environ, "LC_ALL": "C"},
         )
+        if repository.returncode and not repository.stderr.startswith("fatal: not a git repository (or any"):
+            repository.check_returncode()
         if repository.returncode == 0 and repository.stdout.strip() == "true":
             head = subprocess.run(
                 ["git", "rev-parse", "--verify", "HEAD^{commit}"], cwd=root,
@@ -490,7 +503,7 @@ def main() -> int:
             check_adr(root, report)
         if args.scope in ("artifacts", "full"):
             check_artifacts(root, report)
-    except (OSError, UnicodeError, subprocess.SubprocessError) as exc:
+    except (OSError, UnicodeError, RuntimeError, subprocess.SubprocessError) as exc:
         filename = getattr(exc, "filename", None)
         path = Path(filename) if filename else None
         location = path.relative_to(root).as_posix() if path and path.is_relative_to(root) else str(path) if path else None

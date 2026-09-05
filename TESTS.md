@@ -61,7 +61,7 @@ python -m pip install -r requirements-dev.txt
 - 测试文件：`tests/test_audit_docs.py`
 - 测试节点：`AuditDocsTest`
 - 执行命令：`python3 -m unittest tests.test_audit_docs -v`
-- 证据：2026-09-05 使用真实 STATUS 模板复现删除区漏报/替代物误报、提交后历史改写、可选桥接误报和引用式断链；增加独立目录审计、JSON / Shell 结果、Git 上下文、读取失败与日志来源行号测试，见 `docs/audits/2026-09-05-shared-audit-results.md`。
+- 证据：2026-09-05 使用真实 STATUS 模板复现删除区漏报/替代物误报、提交后历史改写、可选桥接误报和引用式断链；增加独立目录审计、JSON / Shell 结果、Git 上下文、读取失败、日志来源行号，以及损坏 Git、子项目基线和循环链接回归，见 `docs/audits/2026-09-05-shared-audit-results.md`。
 
 ### TEST-LOG-001：日志索引可重建且受控归档不丢事件
 

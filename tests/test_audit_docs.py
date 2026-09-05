@@ -104,6 +104,16 @@ class AuditDocsTest(unittest.TestCase):
         finding = next(item for item in report["findings"] if item["check"] == "docs.orphans")
         self.assertEqual(finding["evidence"]["candidates"], ["docs/orphan.md"])
 
+    def test_json_non_directory_link_parent_is_a_document_failure(self):
+        (self.project / "note.txt").write_text("普通文件\n", encoding="utf-8")
+        (self.project / "guide.md").write_text("[不存在](note.txt/missing.md)\n", encoding="utf-8")
+        result = self.run_audit("artifacts", "--format", "json")
+        report = json.loads(result.stdout)
+        self.assertEqual(result.returncode, 1)
+        self.assertEqual(report["status"], "fail")
+        finding = next(item for item in report["findings"] if item["check"] == "links.local")
+        self.assertEqual(finding["evidence"]["target"], "note.txt/missing.md")
+
     def test_json_invalid_log_identifies_the_source_line(self):
         (self.project / "PROJECT_LOG.md").write_text(
             "# LOG\n\n[2026-09-05] fix | 格式错误\n", encoding="utf-8"
@@ -114,6 +124,55 @@ class AuditDocsTest(unittest.TestCase):
         finding = next(item for item in report["findings"] if item["check"] == "log.format")
         self.assertEqual(finding["path"], "PROJECT_LOG.md")
         self.assertEqual(finding["line"], 3)
+
+    def test_json_reports_corrupt_git_metadata_as_execution_error(self):
+        subprocess.run(["git", "init"], cwd=self.project, capture_output=True, check=True)
+        (self.project / ".git/config").write_text("invalid config line\n", encoding="utf-8")
+        result = self.run_audit("artifacts", "--format", "json")
+        report = json.loads(result.stdout)
+        self.assertEqual(result.returncode, 2)
+        self.assertEqual(report["status"], "error")
+        self.assertEqual(report["counts"]["error"], 1)
+        shutil.rmtree(self.project / ".git")
+        (self.project / ".git").write_text("gitdir: /missing/worktree-metadata\n", encoding="utf-8")
+        result = self.run_audit("artifacts", "--format", "json")
+        self.assertEqual(result.returncode, 2)
+        self.assertEqual(json.loads(result.stdout)["status"], "error")
+
+    def test_json_survives_symlink_cycles_in_root_and_link_targets(self):
+        cycle = self.project / "cycle"
+        cycle.symlink_to("cycle")
+        (self.project / "guide.md").write_text("[循环](cycle)\n", encoding="utf-8")
+        for extra in ((), ("--root", str(cycle))):
+            with self.subTest(extra=extra):
+                result = self.run_audit("artifacts", "--format", "json", *extra)
+                report = json.loads(result.stdout)
+                self.assertEqual(result.returncode, 2)
+                self.assertEqual(report["status"], "error")
+                self.assertEqual(report["counts"]["error"], 1)
+
+    def test_log_baseline_paths_are_relative_to_subproject_root(self):
+        def git(*args):
+            return subprocess.run(
+                ["git", "-c", "user.email=test@example.com", "-c", "user.name=Test", *args],
+                cwd=self.project, text=True, capture_output=True, check=True,
+            )
+        subproject = self.project / "app"
+        subproject.mkdir()
+        log = subproject / "PROJECT_LOG.md"
+        log.write_text("# LOG\n\n## [2026-09-05] init | 子项目首提\n", encoding="utf-8")
+        git("init")
+        git("add", "app/PROJECT_LOG.md")
+        git("commit", "-m", "baseline")
+        result = self.run_audit("spine", "--root", str(subproject), "--format", "json")
+        self.assertEqual(result.returncode, 0, result.stdout)
+        finding = next(item for item in json.loads(result.stdout)["findings"] if item["check"] == "log.append-only")
+        self.assertEqual(finding["status"], "pass")
+        log.write_text("# LOG\n", encoding="utf-8")
+        result = self.run_audit("spine", "--root", str(subproject), "--format", "json")
+        self.assertEqual(result.returncode, 1, result.stdout)
+        finding = next(item for item in json.loads(result.stdout)["findings"] if item["check"] == "log.append-only")
+        self.assertEqual(finding["status"], "fail")
 
     def test_json_records_git_baseline_and_uncommitted_changes(self):
         def git(*args):

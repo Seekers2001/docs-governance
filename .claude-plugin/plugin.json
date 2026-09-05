@@ -1,7 +1,7 @@
 {
   "name": "docs-governance",
   "version": "0.7.0",
-  "description": "面向 Claude Code、Codex 与 ChatGPT 的文档治理插件：活文档、领域上下文、ADR、变更影响、契约、测试、回归与结构化日志索引。",
+  "description": "面向长期 AI 协作项目的知识、决策与验证治理插件，把 Agent 的一次性工作沉淀为可继承、可验证、可持续演进的项目能力。",
   "author": {
     "name": "Seekers2001",
     "email": "jiaxinleifm@outlook.com"

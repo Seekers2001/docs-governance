@@ -152,6 +152,12 @@ def build_review_block(document_hash: str, rounds: list[dict], status: str) -> s
 
 
 def write_review(document: Path, original: str, block: str) -> None:
+    try:
+        current = document.read_text(encoding="utf-8")
+    except FileNotFoundError as exc:
+        raise RuntimeError("评审期间文档已删除；不重新创建，请确认后再运行。") from exc
+    if current != original:
+        raise RuntimeError("评审期间正文已变化；保留最新文件，请重新运行评审。")
     clean = source_without_review(original).rstrip()
     document.write_text(f"{clean}\n\n{block}", encoding="utf-8")
 

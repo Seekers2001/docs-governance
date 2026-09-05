@@ -63,8 +63,8 @@
 
 - [`living-docs-governance/SKILL.md`](../skills/living-docs-governance/SKILL.md)：渐进式采用、分级读取、防腐规则、阶段收尾与“一文一职”。
 - [`governance-audit.md`](../commands/governance-audit.md)：只读、便宜层先行、证据化分级报告。
-- [`dbs-agent-migration/SKILL.md`](../../dbskill/skills/dbs-agent-migration/SKILL.md)：多宿主规则文件审计、真源与 bridge 分离。
-- [`dbs-skill-cleaner/SKILL.md`](../../dbskill/skills/dbs-skill-cleaner/SKILL.md)：只读扫描、证据分级、用户确认后才执行。
+- 外部本地材料 `dbs-agent-migration/SKILL.md`（未随本仓库分发）：多宿主规则文件审计、真源与 bridge 分离。
+- 外部本地材料 `dbs-skill-cleaner/SKILL.md`（未随本仓库分发）：只读扫描、证据分级、用户确认后才执行。
 
 其中“四份固定文件”“项目健康仪表盘”“通用项目地图”“全量迁移流程”都不适合直接移植到上游。
 

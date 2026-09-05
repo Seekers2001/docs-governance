@@ -5,11 +5,13 @@
 ## 🔴 红线块（每次必读 —— 删除区 + 未决 P0）
 
 ### 删除区（故意删的，别重建）
-- 暂无
+| 路径 | 原因 | 日期 | 替代物 |
+|---|---|---|---|
+| `README.en.md` | 英文概览统一回主入口 | 2026-09-05 | `README.md` |
 
 ### 未决 P0
-- `/governance-init` 尚未在真实空项目上端到端首跑（2026-07-02 新增命令，逻辑齐但没实测）。
-- `test-collaboration` v1 已实现，但尚未在真实项目完成首次测试资产盘点与 Bug→TEST-ID 试点（首选：经营报表加工系统）。
+- `/governance-init` 的 Codex 共享流程已在真实空项目首跑；Claude Code 原生 slash command 尚未验证（证据见 `docs/audits/2026-08-13-governance-init-empty-project.md`）。
+- `test-collaboration` 已在本插件完成首次测试资产盘点，并把两项审计误报归入 `TEST-AUDIT-001`；仍待业务项目完成试点（首选：经营报表加工系统）。
 - `loop-design-check` skill 与两条主线主题不合（小磊已确认"没关系"），挪出待拍板。
 
 ## 📥 Backlog（方法论优化，2026-07-02 小磊逐条批准；等 dogfood 撞到或排期再做，不抢跑）
@@ -32,7 +34,8 @@
 | `scripts/verify.sh` | 通过 | 通过 = 绿 | 🟢 |
 | Claude / Codex 双端 manifest | 名称与版本一致，skills 共用 | 一致 = 绿 | 🟢 |
 | Skill 路由与用户文档 | 8 个 skill 均进入总路由、README、使用说明 | 无漏登 = 绿 | 🟢 |
-| Python 单元测试 | 12 个 | 全过 = 绿 | 🟢 |
+| Python 单元测试 | 28 个（含机器契约模板） | 全过 = 绿 | 🟢 |
+| 自动 CI | 完整 verify 与日志基线比较；2026-09-05 首次 PR / push 均通过（证据见 [本轮验证](docs/audits/2026-09-05-governance-fixes.md)） | PR / push 成功运行 = 绿 | 🟢 |
 | skill / agent 内部去重 | 是（方法论仅 skill 一处） | 唯一源 | 🟢 |
 | 真实项目 dogfood | 4（经营报表审计、礼仪 demo 审计+修复、本插件自治理、audit-blog 审计） | ≥2 | 🟢 |
 | 可发布底座 | git / LICENSE / CHANGELOG / .gitignore / verify 齐 | 齐 = 绿 | 🟢 |

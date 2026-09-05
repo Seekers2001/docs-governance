@@ -1,7 +1,7 @@
 ---
 name: living-docs-governance
 description: >-
-  把长期项目的文档当成一个小系统来维护，防止文档腐烂——四份各司其职的脊柱文件（CLAUDE.md 共享章程 / CLAUDE_MAP.md 地图 / PROJECT_STATUS.md 健康仪表盘 / PROJECT_LOG.md 流水账）+ Codex 的 AGENTS.md 入口桥接 + 固定读序，并按需连接 CONTEXT、ADR、契约、测试、回归和 Issue Tracker。用于治理初始化、只读审计、阶段同步、LOG 复盘与超过 200 条事件后的归档索引。中文触发：文档治理、活文档、防文档漂移、治理初始化、治理审计、治理同步、治理复盘、AGENTS.md、项目状态追踪、项目地图、健康仪表盘、流水账、日志归档、长期项目治理。English triggers: living documentation, docs governance, governance init, governance audit, governance sync, governance retrospective, AGENTS.md bridge, prevent doc rot, project status dashboard, project map, append-only changelog, project log archive.
+  把长期项目的文档当成一个小系统来维护，防止文档腐烂——四份各司其职的脊柱文件（CLAUDE.md 共享章程 / CLAUDE_MAP.md 地图 / PROJECT_STATUS.md 健康仪表盘 / PROJECT_LOG.md 流水账）+ Codex 的 AGENTS.md 入口桥接 + 固定读序，并按需连接 ARCHITECTURE、CONTEXT、ADR、契约、测试、回归和 Issue Tracker。用于治理初始化、只读审计、阶段同步、LOG 复盘与超过 200 条事件后的归档索引。中文触发：文档治理、活文档、防文档漂移、治理初始化、治理审计、治理同步、治理复盘、AGENTS.md、项目状态追踪、项目地图、架构图、模块流转图、健康仪表盘、流水账、日志归档、长期项目治理。English triggers: living documentation, docs governance, governance init, governance audit, governance sync, governance retrospective, AGENTS.md bridge, architecture document, module flow diagram, prevent doc rot, project status dashboard, project map, append-only changelog, project log archive.
 metadata:
   origin: ECC
 ---
@@ -35,7 +35,8 @@ metadata:
 | 单文件 / 用完即弃 | 什么都不用 | —— |
 | 长过几个模块、要维护一阵 | **CLAUDE.md**（几条硬规则 + 路标） | 开始有人问"这项目现在健康吗" → 备 STATUS |
 | 有健康 / 风险 / 待删要追 | + **PROJECT_STATUS.md** | AI/新人开始"找不到某功能""改错地方" → 备 MAP |
-| 找东西 / 跨模块改开始费劲 | + **CLAUDE_MAP.md** | 反复问"这为什么这么做""上次那个坑" → 备 LOG |
+| 找东西 / 跨 Module 改开始费劲 | + **CLAUDE_MAP.md** | Module 权责、状态归属、依赖或主流程开始说不清 → 备 ARCHITECTURE |
+| Module 架构需要共享 | + **ARCHITECTURE.md**（可选血肉） | 反复问“为什么这样设计” → 备 ADR；要追历史 → 备 LOG |
 | 要追溯决策与历史 | + **PROJECT_LOG.md**（四件套齐） | 分出前后端、接口字段对不上 → 备 CONTRACT |
 | 分前后端 / 多服务 | + **CONTRACT.md**（见 `contract-first`） | —— |
 
@@ -55,13 +56,13 @@ metadata:
 
 | 用户意图 | Claude Code 入口 | Codex / ChatGPT 入口 | 详细执行流程 |
 |---|---|---|---|
-| 空项目初始化 | `/governance-init` | `$living-docs-governance` + “初始化空项目治理” | `../../commands/governance-init.md` |
-| 已有项目治理 | `/governance` | `$living-docs-governance` + “治理当前项目” | `../../commands/governance.md` |
-| 只读审计 | `/governance-audit` | `$living-docs-governance` + “只读审计” | `../../commands/governance-audit.md` |
-| 阶段同步 | `/governance-sync` | `$living-docs-governance` + “阶段收尾同步” | `../../commands/governance-sync.md` |
-| LOG 复盘 | `/governance-retro` | `$living-docs-governance` + “复盘 PROJECT_LOG” | `../../commands/governance-retro.md` |
+| 空项目初始化 | `/governance-init` | `$living-docs-governance` + “初始化空项目治理” | 本文“空项目初始化”执行模式 |
+| 已有项目治理 | `/governance` | `$living-docs-governance` + “治理当前项目” | 本文“已有项目治理”执行模式 |
+| 只读审计 | `/governance-audit` | `$living-docs-governance` + “只读审计” | 本文“只读审计”执行模式 |
+| 阶段同步 | `/governance-sync` | `$living-docs-governance` + “阶段收尾同步” | 本文“阶段同步”执行模式 |
+| LOG 复盘 | `/governance-retro` | `$living-docs-governance` + “复盘 PROJECT_LOG” | 本文“日志复盘”执行模式 |
 
-Codex / ChatGPT 执行时，读取对应流程文件，忽略其中 Claude Code 专用的 frontmatter、`$ARGUMENTS` 语法和自定义 agent 调用；由当前 agent 承担同一职责并保留原有读写边界。只读审计、只读复盘不得因为宿主不同而变成写操作。
+所有宿主直接执行本文对应模式。Claude commands/agents 只选择模式和执行角色；Codex / ChatGPT 由当前 agent 执行，不反向读取 commands/agents。只读审计、只读复盘保持只读。
 
 审计支持 `spine`、`context`、`adr`、`artifacts`、`full` 五种范围。先运行 `scripts/audit-cheap.sh <scope>` 做确定性检查；断链失败就短路，只有通过后才进入语义判断。默认只读；只有用户明确要求保存时，才把报告写入 `docs/audits/YYYY-MM-DD-*.md`。
 
@@ -70,14 +71,35 @@ Codex / ChatGPT 执行时，读取对应流程文件，忽略其中 Claude Code 
 | 文档 | 唯一职责 | 该放什么 | 绝不能放什么 |
 |---|---|---|---|
 | `CLAUDE.md` | 宪法：永远生效的硬规则和路标 | 不可妥协的约定、读序、指向其他文档的路标 | 长篇解释（链接出去）、实时状态、历史 |
-| `CLAUDE_MAP.md` | 地图：只记**文件树看不出来**的语义 | 依赖方向、非显然定位跳转表、"树真实但误导"清单（废弃/生成物/兼容目录）、别动区 | 目录树镜像（`ls` 就有）、能从文件名/header 推出的职责、健康指标（属 STATUS）、历史（属 LOG） |
+| `CLAUDE_MAP.md` | 地图：只记**文件树看不出来**的导航语义 | 非显然定位跳转表、架构/决策/契约等知识入口、"树真实但误导"清单（废弃/生成物/兼容目录）、别动区 | 目录树镜像（`ls` 就有）、Module 权责与流程图（属 ARCHITECTURE）、接口字段细节（属 CONTRACT/代码 Interface）、健康指标（属 STATUS）、历史（属 LOG） |
 | `PROJECT_STATUS.md` | 健康仪表盘：当前状态一眼看清 | 指标对阈值、删除区（故意删掉别重建的文件）、未决违规、P0 行动 | 项目是什么（属 MAP）、发生了什么的叙事（属 LOG） |
-| `PROJECT_LOG.md` | 流水账：只追加的历史 | 每件有意义的事一行（`[日期] 类型 \| 摘要`），新条目追加到底 | 当前状态（属 STATUS）、结构（属 MAP）；永不改/删旧行 |
+| `PROJECT_LOG.md` | 流水账：只追加的历史 | 每件有意义的事一行（`## [日期] 类型 \| 摘要`），新条目追加到底 | 当前状态（属 STATUS）、结构（属 MAP）；永不改/删旧行 |
 
 让它生效的纪律是**非重叠**：每个事实只活在一份文档里。"auth 模块在哪？"→ 地图。"覆盖率现在健康吗？"→ STATUS。"旧解析器啥时候删的、为啥？"→ LOG。每份只干一件事，就不会一起烂。
 
-### 可选上下文、决策与排期
+### ARCHITECTURE.md 的 Module 架构契约（按需）
 
+当项目已经出现多个长期 Module，并开始发生跨 Module 修改、状态互相改写或依赖方向说不清时，按 `templates/ARCHITECTURE.example.md` 创建根目录 `ARCHITECTURE.md`，让它成为**当前架构的唯一说明入口**。`CLAUDE_MAP.md` 只留一行链接，不复制表格或图。ARCHITECTURE 回答六件事：
+
+1. **Module 权责**：每个关键 Module 只用一句话说明唯一职责；能从文件名和文件头稳定推出的普通目录不要逐项登记。
+2. **状态归属**：共享可变状态只指定一个主要拥有者；其他 Module 必须通过它的 Interface 请求读写，不能越过 Interface 直接修改实现细节。
+3. **Interface 与 Seam**：只写调用方必须知道的 Interface 名称、入口和约束载体；字段、错误码、枚举等细节继续留在 `CONTRACT.md`、代码 Interface 或专门规格中，ARCHITECTURE 只挂链接，避免双源真相。
+4. **依赖方向**：用一张小型 Mermaid 图或一行规则表示允许的代码依赖，并明确禁止的反向依赖。依赖图的箭头必须始终表示“源代码依赖目标”，每条边都应有 import、调用、注册或配置证据。
+5. **核心流转**：仅当运行时消息/数据链路不直观时，再画一到三条主链路。流转图必须标明箭头表示运行时数据或事件，不能拿它代替依赖图；数据可以往返，代码依赖仍可保持单向。
+6. **Adapter 关系**：只有确实存在多个实现或明确替换点时，才标出 Interface 后面的 Adapter；不要为了图看起来完整而制造没有消费者的假 Seam。
+
+判断一个 Module 是否清楚，依次问：它只负责什么、拥有什么状态、向外暴露哪个 Interface、允许依赖谁、禁止谁绕过 Interface。内部实现改变而 Interface 不变时，调用方原则上不应跟着修改——这就是架构图要保护的局部性。
+
+生成或更新时必须先读真实代码，不能凭目录名猜：
+
+- 权责、状态拥有者或依赖证据不足 → 标“未验证”或暂不落图，不编造完整架构。
+- 小项目、单文件工具、只有两个直观目录 → 不创建 `ARCHITECTURE.md`，保留最小 MAP。
+- ARCHITECTURE 开始过长 → 拆出下级架构文档，但根 `ARCHITECTURE.md` 仍保留总图和索引；不要把细节塞回 MAP。
+- 审计时抽查表格、两类箭头和真实代码是否一致；发现跨层直连、状态多头修改、绕过 Interface 或已删除 Module 仍留在图里，按漂移报告。
+
+### 可选架构、上下文、决策与排期
+
+- Module 权责、状态归属、代码依赖方向或核心流转开始需要团队共享时，才创建根目录 `ARCHITECTURE.md`；它只记录当前结构，不记录选择理由、Interface 字段、任务或历史。MAP 只指向它。
 - 稳定领域术语、概念关系和歧义反复影响协作时，才创建根目录 `CONTEXT.md`；它不写实现、状态、任务、需求全文或决策。具体边界见 `context-and-decisions`。
 - 出现架构、数据库、认证、部署、数据模型或 API 版本等难回退决策时，才创建 `docs/adr/README.md` 和一项决策一个 ADR 文件。MAP 只指向 ADR 索引，不枚举所有决策。
 - 任务、负责人、阻塞和项目排期由 GitHub Issues、Linear 或项目已有 Tracker 管理；没有外部 Tracker 时再采用本地 `.scratch/`。`PROJECT_STATUS.md` 只保留当前健康快照，不承担排期。
@@ -95,12 +117,13 @@ Codex / ChatGPT 执行时，读取对应流程文件，忽略其中 Claude Code 
 |---|---|---|
 | `CLAUDE.md` | **全文必读**（小、是规则，违章无信号） | —— |
 | `PROJECT_STATUS.md` | **只读顶部红线块**：删除区 + 未决 P0/违规（几行；危险不报到） | 需要看健康度/指标时，读其余部分 |
-| `CLAUDE_MAP.md` | **默认不读**（它只记树里看不出来的：依赖方向 / 误导清单 / 别动区；目录树本身按需 `ls`） | 找不到东西、要跨模块改、**新建/删/重命名文件前**，读它 |
+| `CLAUDE_MAP.md` | **默认不读**（它只记树里看不出来的导航、误导清单和别动区；目录树本身按需 `ls`） | 找不到东西、要跨 Module 改、**新建/删/重命名文件前**，读它 |
+| `ARCHITECTURE.md`（若存在） | **默认不读** | 要理解整体结构、改变 Module 权责/状态/Interface/依赖/核心流转，或做跨 Module 设计时，读它 |
 | `PROJECT_LOG.md` | **不读**（transcript） | 排查 bug、追溯"为什么删 / 为什么这么做"时，`grep` 或读尾部 |
 
 如果项目使用 Codex，按 `templates/AGENTS.example.md` 建一个薄桥接入口：让 Codex 先读共享章程 `CLAUDE.md` 和 STATUS 红线，并在结构性操作前按需读取 MAP。不要把章程或 MAP 内容复制进 `AGENTS.md`，也不要在入口文件里写死目录树。
 
-常驻成本压到最小：CLAUDE 全文 + STATUS 红线几行 + MAP 索引头。大头（完整 MAP、STATUS 指标、整本 LOG）全按需。前三类是 **projection**（决定此刻喂什么），LOG 是 **transcript**（记录发生了什么）。
+常驻成本压到最小：CLAUDE 全文 + STATUS 红线几行。大头（完整 MAP、ARCHITECTURE、STATUS 指标、整本 LOG）全按需。LOG 之外的当前真相载体是 **projection**（决定此刻喂什么），LOG 是 **transcript**（记录发生了什么）。
 
 **两条护栏（防"该读没读"——这是按需读唯一的真风险）：**
 
@@ -113,12 +136,13 @@ Codex / ChatGPT 执行时，读取对应流程文件，忽略其中 Claude Code 
 > 3. **建立派生索引**：脚本从活跃 LOG + archive 重建 `.governance/project-log.sqlite`。数据库默认进 `.gitignore`，不是唯一事实源；损坏或删除后运行 `rebuild` 即可恢复。
 > 4. **分类不猜**：类型取事件头；模块只在明确写出或能从真实路径解析时登记，否则为 `unclassified`；引用只提取 commit、TEST-ID、ADR、CONTRACT 和明确路径。内容哈希保证幂等。
 > 5. **失败不伤原文**：解析、归档或建库失败时，不得留下被截断的 `PROJECT_LOG.md`。审计以活跃文件和 archive 的事件合集判断只追加完整性。
-> 6. **目录 + 内容分层**：主 LOG 只当**目录**——每条一行（`[日期] 类型 | 一句话`），需要长详情（完整审计报告、大段修复记录）时下沉到独立文件（如 `docs/log-details/2026-07-03-audit.md`），目录行尾挂链接。主 LOG 永远短、可整读；详情按需点开。这就是「脊柱保持瘦、血肉下沉」用在 LOG 自己身上。
+> 6. **目录 + 内容分层**：主 LOG 只当**目录**——每条一行（`## [日期] 类型 | 一句话`），需要长详情（完整审计报告、大段修复记录）时下沉到独立文件（如 `docs/log-details/2026-07-03-audit.md`），目录行尾挂链接。主 LOG 永远短、可整读；详情按需点开。这就是「脊柱保持瘦、血肉下沉」用在 LOG 自己身上。
 > 7. **复盘统计**（LOG 不只是负担，是资产）：归档前跑一次 `/governance-retro`，统计哪个模块出错最多、哪类错误重复出现、标准变更了几次——**重复 TOP 的错误 = "该下沉成 lint / 回归测试"的候选清单**（见 `module-regression` 铁律"坑必下沉"）。同一个坑在 LOG 里出现第二次，说明它还没被机器接管。
 
 ### 防腐烂的更新规则
 
-- 改了结构（增删模块或顶层目录）→ **同一次改动**里更新 `CLAUDE_MAP.md`。
+- 改了路径、入口、知识载体或误导区 → **同一次改动**里更新 `CLAUDE_MAP.md`。
+- 改了 Module 权责、状态归属、Interface、代码依赖方向或核心流转 → **同一次改动**里更新 `ARCHITECTURE.md`（若已启用）；若尚未启用但跨 Module 结构已不直观，按模板创建并从 MAP 挂入口。
 - 指标越过阈值，或你故意删了某文件 → 更新 `PROJECT_STATUS.md`，并把路径加进删除区，免得被重建。
 - 发生任何有意义的事（commit / fix / refactor / cleanup / audit）→ 往 `PROJECT_LOG.md` 追加一行。
 - `CLAUDE.md` 保持短：超过一页就把细节挪进对应文档，原处只留路标。
@@ -128,7 +152,8 @@ Codex / ChatGPT 执行时，读取对应流程文件，忽略其中 Claude Code 
 
 当用户说"同步一下"、"整理文档"、"收尾"、"这个阶段做完了"、"新人能接手"，或运行 `/governance-sync` 时，不要只追加 `PROJECT_LOG.md`。先按 `references/governance-sync-matrix.md` 判断本次变化应该影响哪份治理文档：
 
-- 结构、入口、模块、跳转表 → `CLAUDE_MAP.md`
+- 路径、入口、知识载体、误导区、跳转表 → `CLAUDE_MAP.md`
+- Module 权责、状态归属、Interface、代码依赖方向、核心流转 → `ARCHITECTURE.md`（若已启用或已达到启用条件）
 - 风险、测试缺口、指标、待删区 → `PROJECT_STATUS.md`
 - 长期硬规则、读序、不可妥协约定 → `CLAUDE.md`
 - 重要历史事件 → `PROJECT_LOG.md`（只追加）
@@ -136,7 +161,7 @@ Codex / ChatGPT 执行时，读取对应流程文件，忽略其中 Claude Code 
 - 领域术语或关系变化 → `CONTEXT.md`（若存在且证据已确认）
 - 难回退技术决策 → `docs/adr/`（若触发 ADR）
 
-关键区别：`PROJECT_LOG.md` 是记录员，只追加历史；`CLAUDE_MAP.md` / `PROJECT_STATUS.md` / `CLAUDE.md` 是编辑过的当前真相，发现旧事实过期要修正、合并或删除。
+关键区别：`PROJECT_LOG.md` 是记录员，只追加历史；`CLAUDE_MAP.md` / `ARCHITECTURE.md` / `PROJECT_STATUS.md` / `CLAUDE.md` 是编辑过的当前真相，发现旧事实过期要修正、合并或删除。
 
 ## 文档角色分层（管 4 件套之外的全部文档）
 
@@ -148,6 +173,7 @@ Codex / ChatGPT 执行时，读取对应流程文件，忽略其中 Claude Code 
 |---|---|---|
 | 该遵守什么（永久铁律） | 宪法 | `CLAUDE.md`（脊柱） |
 | 在哪找、树看不出的语义 | 地图 | `CLAUDE_MAP.md`（脊柱） |
+| 当前 Module 怎么分工、怎样依赖和流转 | 架构 | `ARCHITECTURE.md`（按需血肉） |
 | 现在健康吗、啥是禁区 | 仪表盘 | `PROJECT_STATUS.md`（脊柱） |
 | 发生过什么 | 流水账 | `PROJECT_LOG.md`（脊柱） |
 | 要做什么 / 怎么做 | 规范 | spec / plan / 模块规则 |
@@ -170,6 +196,7 @@ Codex / ChatGPT 执行时，读取对应流程文件，忽略其中 Claude Code 
 
 - `templates/CLAUDE.example.md`
 - `templates/CLAUDE_MAP.example.md`
+- `templates/ARCHITECTURE.example.md`（多个长期 Module 且架构不再直观时才用）
 - `templates/PROJECT_STATUS.example.md`
 - `templates/PROJECT_LOG.example.md`
 - `templates/context.example.md`（稳定领域语言出现时才用）
@@ -197,7 +224,7 @@ Codex / ChatGPT 执行时，读取对应流程文件，忽略其中 Claude Code 
 
 ## 例子
 
-- **文档和代码漂移了**：一个半年前的数据工具，README 还在描述 v1 管线。采用四件套后，MAP 写出真实模块布局，STATUS 标记 README 过期，此后每次结构变更都在同一 commit 里更新 MAP。
+- **文档和代码漂移了**：一个半年前的数据工具，README 还在描述 v1 管线。采用四件套后，MAP 指向当前结构入口，ARCHITECTURE 写出真实 Module 布局，STATUS 标记 README 过期；此后路径变化更新 MAP，Module 结构变化更新 ARCHITECTURE。
 - **agent 反复丢上下文**：每次进会话都重新 grep 学布局。采用读序后，会话开头四次短读重建上下文，不再重复发现。
 - **删掉的文件老回来**：一个死的 `legacy_parser.py` 被删两次、重建两次。把它记进 STATUS 删除区（连同原因和替代物），循环就断了。
 
@@ -209,3 +236,73 @@ Codex / ChatGPT 执行时，读取对应流程文件，忽略其中 Claude Code 
 - `contract-first` skill —— 当项目分前后端两层、需要防接口字段漂移时，那套契约方法论的姊妹篇。
 - `context-and-decisions` skill —— 管稳定领域语言与架构/数据库等难回退决策。
 - `change-impact` skill —— 修改前收集影响证据，实施后对照实际 diff、验证与文档同步。
+
+
+## 共享执行模式
+
+以下流程是两端共用的唯一执行规则；命令参数由宿主适配层转成模式、范围、日期或本阶段说明。
+
+### 空项目初始化
+
+适用于当前目录没有业务代码的项目；已有代码时转到“已有项目治理”。项目名、技术栈或已确认模块缺失时先澄清，不猜技术栈。
+
+1. 按 `templates/CLAUDE.example.md` 生成不超过 60 行的章程，移除尚不存在的必读入口。加入：
+   - 更新文件或业务规则前读取 `docs/governance.md`，按其流程检查。
+   - 根据真实技术栈填写验证命令和最小启动命令，不照抄未安装的工具。
+   - 验证通过后按型提交，提交信息英文，只 add 具体文件；初始化授权包含 git init 和首提。推送须用户明确要求。禁止自动执行批量 add、强制推送、硬重置、强删分支、丢弃全工作区、amend 或交互式 rebase。
+   - 代码完成后：相关验证 → 精简后复验 → 可用的审查 → 对照 Spec 成功标准 → 按治理流程进行真实运行和产物检查；全过才提交。
+   - 操作失败先判断缺信息、缺工具还是缺约束，再选择下一步，不盲目重试。
+   - Spec 管需求/验收，Plan 管方案/已知坑。外部 API、复杂转换或图像批处理等高不确定实现，先在 references 中保存最小跑通参考；无文件时不建空目录。
+2. 从 `templates/governance.example.md` 复制 `docs/governance.md`，只替换项目名，保留项目区占位符供真实需要出现时填写。
+3. 从 `templates/PROJECT_LOG.example.md` 的格式生成 LOG，只留当天初始化事件，不复制示例历史。
+4. 使用 Codex 或需要跨宿主兼容时，从 `templates/AGENTS.example.md` 生成薄桥接，保留可选引用标记。
+5. 先确认当前目录不是上级仓库中的误操作位置；必要时 git init。用 `git rev-parse --git-path hooks/pre-commit` 确认默认 hook 位置，若有 `core.hooksPath` 则尊重项目配置。安装 `templates/pre-commit.example` 并赋可执行权限；已有 hook 不覆盖，报告如何合并护栏。此流程顺序适用于普通仓库和 worktree。
+6. 只暂存本次生成文件并首提；没有用户推送指令时不 push。
+7. 验收：必需文件可读、章程行数、可选载体未生成空壳、hook 可执行、首提成功；运行 `scripts/audit-cheap.sh full`，任何失败先解决再交付。
+
+空项目不预建 MAP、STATUS、ARCHITECTURE、CONTEXT、ADR、CONTRACT、TESTS、REGRESSION 或无首个文件的目录。缺省章程引用使用下述可选标记，不为消除断链创建空文档。Stop 提醒由已启用且获信任的插件 hook 提供，不另外生成项目 settings。
+
+交付列出真实文件、章程行数、验证结果和首提 SHA。下一步根据实际需要编写首份 Spec、验证参考实现，再开发。
+
+### 已有项目治理
+
+- 先按分级读序侦察真实入口、模块、测试、依赖和现有文档；按渐进采用条件选择载体，不因文件缺失就补齐四件套。
+- 当前真相增量编辑，LOG 只追加；Module 架构达到条件才创建 ARCHITECTURE 并从 MAP 挂入口。其余可选载体按本文职责路由。
+- 项目使用 Codex 或已有 AGENTS 时维护薄桥接。指定子目录时只更新对应导航与健康；`log: 一句话` 模式只追加一个标准格式事件。
+- 未配置 pre-commit 时，提出是否采用模板护栏；用户已授权则安装。遵循“空项目初始化”中的真实 hook 路径与不覆盖约束。
+- 收尾按同步矩阵核对职责、路径、已测指标和文档长度；运行日志 status。超过阈值先建议复盘，未经确认不归档。
+- 报告实际增改文件、证据、验证结果与待确认项，不把占位符或未验证指标写成已完成事实。
+
+### 只读审计
+
+默认范围 full；支持 spine/context/adr/artifacts。先执行 `bash <插件目录>/scripts/audit-cheap.sh <范围>`，任何非零退出码都先报告并短路；只有通过后进入语义审计。指定对象时在选定范围内重点核对，仍保持只读。
+
+日志默认比较工作区与 HEAD。审查已提交变更时必须指定原始基线：`python3 <插件目录>/scripts/audit-docs.py --root <项目根> --scope full --base-ref <基线提交>`；Shell 入口可用 `DOCS_GOVERNANCE_BASE_REF`。PR 使用目标分支基线，push 使用推送前提交。显式基准不可解析时失败；无 Git 历史时标未验证。
+
+可选的代码路径引用按行声明：`<!-- governance: optional=CONTEXT.md,ARCHITECTURE.md -->`。只豁免列出的路径尚不存在，不豁免文件已存在后的内容检查。活动文件和普通 Markdown 链接不得用可选标记隐藏断链。删除区使用标题以“删除区”开头的章节；表格第一列为已删路径，替代物放后续列；列表每行只列一个删除目标。
+
+语义层按范围检查：
+
+- 四件套是否各司其职、是否重复或矛盾；CLAUDE 是否过载，MAP 是否复制架构或目录树，STATUS 指标是否实际量过，LOG 是否只承担历史。AGENTS 只桥接共享章程。
+- ARCHITECTURE 的权责、状态归属、代码依赖和运行时流转是否有真实 import/调用/注册/状态写入证据；证据不足标未验证。README、过期文档、误导目录与当前代码冲突时报告。
+- CONTEXT 是否只管稳定领域语言；必要时读 `context-and-decisions` 检查 accepted ADR 冲突、替代关系、理由、后果和退出路径。
+- 契约存在时读 `contract-first`：检查唯一机器来源、消费方与提供方证据、版本与真实序列化结果，不把手写字段表或内部类型检查当联调。
+- 依同步矩阵查漏；活跃 Spec/Issue 的成功标准是否连到实现、TEST-ID/人工出口和交付证据，归档内容是否仍被误当当前依据。Issue Tracker 不可访问时，任务状态与排期标未验证。
+- 检查全部文档可达性与职责下沉；确定性孤儿提示只是候选，不能证明从脊柱可达。TEST-ID 字符串出现不等于必要测试点已有完整证据。
+- 存在 `.claude/` 时检查死配置、模糊命名、个人偏好混入团队、空目录及规则过载。针对具体变更时再按 `change-impact` 检查超范围改动、迁移尾项和遗留临时代码。
+
+输出总体可信度、P0/P1/P2 发现、具体证据、影响、建议、通过项及待人工确认项。未测量不背书，建议不写成已修复。默认在回复输出，用户要求保存时才写审计报告。
+
+### 阶段同步
+
+按 `references/governance-sync-matrix.md` 执行：用本阶段说明、会话记录和实际 diff 列出应同步载体，确定的当前真相直接增量更新；未知项列待确认。重点对象（如 contract）用于缩小范围，不改变文件职责。
+
+核对 `change-impact` 的计划与实际影响、成功标准及验证证据；LOG 只追加，归档仍遵守事件阈值和确认边界。交付列出每份文档的实际变化、理由、未验证项和待确认项。
+
+### 日志复盘
+
+默认只读全量；指定起始日期时仅统计该日期起的事件。先运行 `project-log-index.py status --root <项目根>`，再读活跃 LOG；全量模式存在 archive 时一并读。索引可辅助查询，证据必须能回到 Markdown；LOG 不存在时报告缺失。
+
+按真实类型和明确路径统计模块 fix 热点前五、出现至少两次的错误类型、标准变更的旧值/新值/理由和审计间隔；对照期间 commit 数，不凭目录名猜模块。连续放宽标准要提示；重复错误提出回归测试/lint/schema 的下沉候选，并关联 `test-collaboration`。
+
+输出分布、重复错误、标准审查和候选清单。修复、补测及经确认归档是后续写入动作，不混入只读复盘；不把任务排期写入 SQLite。

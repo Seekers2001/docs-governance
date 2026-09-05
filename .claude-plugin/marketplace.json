@@ -8,7 +8,7 @@
     {
       "name": "docs-governance",
       "source": "./",
-      "description": "兼容 Claude Code、Codex 与 ChatGPT：活文档、领域上下文、ADR、变更影响、契约、测试、回归与日志索引。"
+      "description": "面向长期 AI 协作项目的知识、决策与验证治理：把 Agent 的一次性工作沉淀为可继承、可验证、可持续演进的项目能力。"
     }
   ]
 }

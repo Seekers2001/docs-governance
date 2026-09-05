@@ -4,10 +4,12 @@
 > 这份只写四样**光看文件名推不出来、grep 也搜不到**的东西。判据：能从真实文件树 + 文件头注释稳定推出来的，一律别写。
 > 这份**默认不读**，只在"找不到东西 / 要跨模块改 / 动手新建删除重命名文件前"才翻。
 
-## 1. 依赖方向（谁能调谁，防乱引用）
+## 1. 架构入口（项目启用时只留链接）
 
-`main → ui → services → utils`；**禁止反向**（utils 不准依赖任何业务层，services 不准反过来调 ui）。
-> 这是架构铁律，文件树里完全看不出来，但违反了就埋下循环依赖的雷。
+- 当前 Module 权责、状态归属、代码依赖图与运行时核心流转 → `ARCHITECTURE.md`
+- 架构、数据库等难回退决策及理由 → `docs/adr/README.md`
+
+> MAP 只负责把人和 agent 带到正确载体，不复制架构表或流程图。项目尚未启用这些文档时删除对应行，不保留空链接。
 
 ## 2. 不好找的东西在哪（跳转表，指向稳定锚点）
 
@@ -19,7 +21,7 @@
 | 全局配置入口 | `config/settings.yaml` | 不是 `.env` |
 | 某个 agent 工具怎么注册 | `src/agent/tool_registry.py` | 加工具要同步这里 |
 
-项目已启用对应载体时，再把知识入口挂在这里：领域词汇 → `CONTEXT.md`；架构/数据库决策 → `docs/adr/README.md`；接口 → `CONTRACT.md`；测试证据 → `TESTS.md`；下游回归 → `REGRESSION.md`；任务与排期 → Issue Tracker。只挂入口，不枚举每个 ADR、Issue、Spec 或任务。
+项目已启用对应载体时，再把知识入口挂在这里：当前架构 → `ARCHITECTURE.md`；领域词汇 → `CONTEXT.md`；架构/数据库决策 → `docs/adr/README.md`；接口 → `CONTRACT.md`；测试证据 → `TESTS.md`；下游回归 → `REGRESSION.md`；任务与排期 → Issue Tracker。只挂入口，不复制正文，也不枚举每个 ADR、Issue、Spec 或任务。
 
 ## 3. 树真实但会骗你的（最值钱的一栏）
 

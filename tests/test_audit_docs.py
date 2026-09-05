@@ -1,4 +1,5 @@
 from pathlib import Path
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -17,9 +18,9 @@ class AuditDocsTest(unittest.TestCase):
     def tearDown(self):
         self.temp_dir.cleanup()
 
-    def run_audit(self, scope: str) -> subprocess.CompletedProcess[str]:
+    def run_audit(self, scope: str, *extra: str) -> subprocess.CompletedProcess[str]:
         return subprocess.run(
-            [sys.executable, str(SCRIPT), "--root", str(self.project), "--scope", scope],
+            [sys.executable, str(SCRIPT), "--root", str(self.project), "--scope", scope, *extra],
             text=True,
             capture_output=True,
             check=False,
@@ -30,6 +31,125 @@ class AuditDocsTest(unittest.TestCase):
         result = self.run_audit("artifacts")
         self.assertEqual(result.returncode, 1)
         self.assertIn("Markdown 链接断裂", result.stdout)
+
+    def test_spine_scope_checks_architecture_paths(self):
+        (self.project / "ARCHITECTURE.md").write_text(
+            "# Architecture\n\nInterface 定义在 `src/missing.py`。\n",
+            encoding="utf-8",
+        )
+        result = self.run_audit("spine")
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("ARCHITECTURE.md -> src/missing.py", result.stdout)
+
+    def test_spine_scope_does_not_treat_open_p0_paths_as_deleted(self):
+        (self.project / "PROJECT_STATUS.md").write_text(
+            "# Status\n\n## 红线\n\n### 删除区\n- 暂无\n\n### 未决 P0\n- `TESTS.md` 已建立。\n",
+            encoding="utf-8",
+        )
+        (self.project / "TESTS.md").write_text("# TESTS\n", encoding="utf-8")
+        result = self.run_audit("spine")
+        self.assertEqual(result.returncode, 0, result.stdout)
+        self.assertIn("删除区无复活", result.stdout)
+
+    def test_deleted_paths_are_checked_under_real_status_heading(self):
+        status = (ROOT / "templates/PROJECT_STATUS.example.md").read_text(encoding="utf-8")
+        (self.project / "PROJECT_STATUS.md").write_text(status, encoding="utf-8")
+        old = self.project / "src/legacy_parser.py"
+        old.parent.mkdir()
+        old.touch()
+        result = self.run_audit("spine")
+        self.assertEqual(result.returncode, 1, result.stdout)
+        self.assertIn("删除区目标已复活：src/legacy_parser.py", result.stdout)
+
+    def test_deleted_table_replacement_is_not_a_deleted_target(self):
+        (self.project / "PROJECT_STATUS.md").write_text(
+            "# Status\n\n### 删除区\n| 路径 | 替代物 |\n|---|---|\n"
+            "| `legacy.py` | `current.py` |\n\n### 未决 P0\n- `current.py` 待检查\n",
+            encoding="utf-8",
+        )
+        (self.project / "current.py").touch()
+        result = self.run_audit("spine")
+        self.assertEqual(result.returncode, 0, result.stdout)
+
+    def test_optional_bridge_references_allow_day_zero_but_required_paths_fail(self):
+        (self.project / "AGENTS.md").write_text(
+            (ROOT / "templates/AGENTS.example.md").read_text(encoding="utf-8"), encoding="utf-8"
+        )
+        (self.project / "CLAUDE.md").write_text("# 章程\n", encoding="utf-8")
+        (self.project / "PROJECT_LOG.md").write_text("# LOG\n", encoding="utf-8")
+        result = self.run_audit("spine")
+        self.assertEqual(result.returncode, 0, result.stdout)
+        (self.project / "CLAUDE.md").write_text("必读 `required.md`。\n", encoding="utf-8")
+        result = self.run_audit("spine")
+        self.assertEqual(result.returncode, 1, result.stdout)
+        self.assertIn("required.md", result.stdout)
+
+    def test_reference_links_and_angle_destinations_are_checked(self):
+        (self.project / "guide.md").write_text(
+            '[安装][install]\n[install]: <docs/install guide.md> "安装"\n', encoding="utf-8"
+        )
+        result = self.run_audit("artifacts")
+        self.assertEqual(result.returncode, 1, result.stdout)
+        target = self.project / "docs/install guide.md"
+        target.parent.mkdir()
+        target.touch()
+        result = self.run_audit("artifacts")
+        self.assertEqual(result.returncode, 0, result.stdout)
+
+    def test_link_examples_in_code_are_not_live_links(self):
+        (self.project / "guide.md").write_text(
+            '```markdown\n[例子](missing.md)\n[ref]: other.md\n```\n'
+            '`[内联例子](also-missing.md)`\n', encoding="utf-8"
+        )
+        result = self.run_audit("artifacts")
+        self.assertEqual(result.returncode, 0, result.stdout)
+
+    def test_committed_log_rewrite_is_rejected_against_explicit_base(self):
+        def git(*args):
+            return subprocess.run(
+                ["git", "-c", "user.email=test@example.com", "-c", "user.name=Test", *args],
+                cwd=self.project, text=True, capture_output=True, check=True,
+            )
+        git("init")
+        log = self.project / "PROJECT_LOG.md"
+        log.write_text("# LOG\n\n## [2026-01-01] fix | original\n", encoding="utf-8")
+        git("add", "PROJECT_LOG.md")
+        git("commit", "-m", "baseline")
+        base = git("rev-parse", "HEAD").stdout.strip()
+        log.write_text("# LOG\n\n## [2026-01-01] fix | rewritten\n", encoding="utf-8")
+        git("add", "PROJECT_LOG.md")
+        git("commit", "-m", "rewrite")
+        result = self.run_audit("spine", "--base-ref", base)
+        self.assertEqual(result.returncode, 1, result.stdout)
+        self.assertIn("被删除或改写", result.stdout)
+        log.unlink()
+        result = self.run_audit("spine", "--base-ref", base)
+        self.assertEqual(result.returncode, 1, result.stdout)
+        self.assertIn("被删除或改写", result.stdout)
+        result = self.run_audit("spine", "--base-ref", "missing-ref")
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("基准", result.stderr)
+
+    def test_noncanonical_log_events_are_not_silently_ignored(self):
+        (self.project / "PROJECT_LOG.md").write_text(
+            "# LOG\n\n[2026-09-05] contract | 接口变更\n", encoding="utf-8"
+        )
+        result = self.run_audit("spine")
+        self.assertEqual(result.returncode, 1, result.stdout)
+        self.assertIn("日志事件格式错误", result.stdout)
+
+    def test_repository_audits_without_neighboring_checkouts(self):
+        files = subprocess.check_output(
+            ["git", "ls-files", "--cached", "--others", "--exclude-standard", "-z"], cwd=ROOT
+        ).decode().split("\0")
+        for name in set(files):
+            if not name or not (ROOT / name).is_file():
+                continue
+            target = self.project / name
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(ROOT / name, target)
+        result = self.run_audit("full")
+        self.assertEqual(result.returncode, 0, result.stdout)
 
     def test_adr_scope_requires_every_file_in_index(self):
         adr_dir = self.project / "docs" / "adr"
@@ -82,6 +202,22 @@ class AuditDocsTest(unittest.TestCase):
         result = self.run_audit("artifacts")
         self.assertEqual(result.returncode, 1)
         self.assertIn("TEST-ID 未在 TESTS.md 登记", result.stdout)
+
+    def test_artifact_scope_ignores_skill_names_plural_and_marked_examples(self):
+        docs = self.project / "docs"
+        docs.mkdir()
+        (self.project / "TESTS.md").write_text("# TESTS\n\nTEST-AUDIT-001\n", encoding="utf-8")
+        (docs / "guide.md").write_text(
+            "test-collaboration 负责维护 TEST-IDs，真实证据见 TEST-AUDIT-001。\n",
+            encoding="utf-8",
+        )
+        (self.project / "proposal.md").write_text(
+            "<!-- test-id-audit: examples-only -->\n\n示例：TEST-ORDER-001。\n",
+            encoding="utf-8",
+        )
+        result = self.run_audit("artifacts")
+        self.assertEqual(result.returncode, 0, result.stdout)
+        self.assertIn("跨文档 TEST-ID 均可回到 TESTS.md", result.stdout)
 
     def test_log_move_to_archive_preserves_append_only_history(self):
         subprocess.run(["git", "init"], cwd=self.project, capture_output=True, check=True)

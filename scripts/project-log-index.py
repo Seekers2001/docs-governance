@@ -41,6 +41,9 @@ class Entry:
 
 
 def parse_entries(text: str, source_file: str) -> tuple[str, list[Entry]]:
+    for line in text.splitlines():
+        if re.match(r"^(?:#{1,6}\s*)?\[\d{4}-\d{2}-\d{2}\].*\|", line) and not ENTRY_RE.fullmatch(line):
+            raise SystemExit(f"{source_file} 日志事件格式错误：应使用 ## [日期] 类型 | 摘要")
     matches = list(ENTRY_RE.finditer(text))
     if not matches:
         return text.rstrip() + "\n", []

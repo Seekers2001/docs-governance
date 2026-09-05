@@ -12,14 +12,18 @@ from urllib.parse import unquote
 
 
 SPINE = ("CLAUDE.md", "CLAUDE_MAP.md", "PROJECT_STATUS.md", "PROJECT_LOG.md")
-OPTIONAL_CARRIERS = ("AGENTS.md", "CONTEXT.md", "CONTRACT.md", "TESTS.md", "REGRESSION.md")
+OPTIONAL_CARRIERS = ("AGENTS.md", "ARCHITECTURE.md", "CONTEXT.md", "CONTRACT.md", "TESTS.md", "REGRESSION.md")
 ENTRY_RE = re.compile(
     r"^## \[(?P<date>\d{4}-\d{2}-\d{2})\]\s+(?P<type>[^|\n]+?)\s*\|\s*(?P<summary>[^\n]+)$",
     re.MULTILINE,
 )
-MARKDOWN_LINK_RE = re.compile(r"\[[^\]]*\]\(([^)]+)\)")
+LINK_DESTINATION = r'(<[^>\n]+>|(?:\\.|[^\s()]|\([^()]*\))+)'
+MARKDOWN_LINK_RE = re.compile(r'\[[^\]\n]*\]\(\s*' + LINK_DESTINATION + r'(?:\s+["\'][^\n]*?["\'])?\s*\)')
+REFERENCE_LINK_RE = re.compile(r'^ {0,3}\[[^\]\n]+\]:\s*' + LINK_DESTINATION, re.MULTILINE)
 CODE_PATH_RE = re.compile(r"`([^`\n]+)`")
-TEST_ID_RE = re.compile(r"\bTEST-[A-Z0-9][A-Z0-9-]*\b", re.IGNORECASE)
+OPTIONAL_PATH_RE = re.compile(r'<!--\s*governance:\s*optional=([^>]+?)\s*-->')
+TEST_ID_RE = re.compile(r"\bTEST-(?:[A-Z0-9]+-)*\d+\b", re.IGNORECASE)
+TEST_ID_EXAMPLE_MARKER = "<!-- test-id-audit: examples-only -->"
 ADR_FILE_RE = re.compile(r"^\d{4}-[a-z0-9-]+\.md$")
 ADR_TARGET_RE = re.compile(r"\b\d{4}-[a-z0-9-]+\.md\b")
 IGNORED_DIRS = {".git", ".governance", ".venv", "node_modules", "vendor", "__pycache__"}
@@ -55,6 +59,9 @@ def markdown_files(root: Path) -> list[Path]:
 
 
 def event_contents(text: str) -> list[str]:
+    for line in text.splitlines():
+        if re.match(r"^(?:#{1,6}\s*)?\[\d{4}-\d{2}-\d{2}\].*\|", line) and not ENTRY_RE.fullmatch(line):
+            raise ValueError("日志事件格式错误：应使用 ## [日期] 类型 | 摘要")
     matches = list(ENTRY_RE.finditer(text))
     result: list[str] = []
     for index, match in enumerate(matches):
@@ -63,9 +70,11 @@ def event_contents(text: str) -> list[str]:
     return result
 
 
-def git_show(root: Path, relative: str) -> str | None:
+def git_show(root: Path, relative: str, base_ref: str | None) -> str | None:
+    if base_ref is None:
+        return None
     command = subprocess.run(
-        ["git", "show", f"HEAD:{relative}"],
+        ["git", "show", f"{base_ref}:{relative}"],
         cwd=root,
         text=True,
         capture_output=True,
@@ -75,11 +84,31 @@ def git_show(root: Path, relative: str) -> str | None:
 
 
 def normalize_link_target(raw: str) -> str | None:
-    target = raw.strip().split(maxsplit=1)[0].strip("<>")
+    target = raw.strip().strip("<>")
     target = unquote(target.split("#", 1)[0])
     if not target or target.startswith(("#", "http://", "https://", "mailto:", "tel:", "data:")):
         return None
     return target
+
+
+def markdown_targets(text: str) -> list[str]:
+    """检查内联链接和引用定义；代码示例不是活动链接。"""
+    prose: list[str] = []
+    fence: str | None = None
+    for line in text.splitlines():
+        marker = re.match(r"^ {0,3}(`{3,}|~{3,})", line)
+        if fence is None and marker:
+            fence = marker.group(1)
+            continue
+        if fence is not None:
+            if re.fullmatch(r" {0,3}" + re.escape(fence[0]) + "{" + str(len(fence)) + r",}\s*", line):
+                fence = None
+            continue
+        if line.startswith(("    ", "\t")):
+            continue
+        prose.append(re.sub(r"(`+).*?\1", "", line))
+    content = "\n".join(prose)
+    return MARKDOWN_LINK_RE.findall(content) + REFERENCE_LINK_RE.findall(content)
 
 
 def resolve_target(root: Path, source: Path, target: str) -> Path:
@@ -94,7 +123,7 @@ def check_markdown_links(root: Path, files: list[Path], report: Report) -> None:
         if "templates" in source.relative_to(root).parts:
             continue
         text = source.read_text(encoding="utf-8")
-        for raw in MARKDOWN_LINK_RE.findall(text):
+        for raw in markdown_targets(text):
             target = normalize_link_target(raw)
             if target is None:
                 continue
@@ -126,13 +155,19 @@ def check_spine_paths(root: Path, report: Report) -> None:
         source = root / name
         if not source.exists():
             continue
-        for value in CODE_PATH_RE.findall(source.read_text(encoding="utf-8")):
-            if not plausible_code_path(value):
-                continue
-            candidate = Path(value)
-            resolved = candidate if candidate.is_absolute() else root / candidate
-            if not resolved.exists():
-                broken.append(f"{name} -> {value}")
+        for line in source.read_text(encoding="utf-8").splitlines():
+            optional = {
+                value.strip()
+                for declaration in OPTIONAL_PATH_RE.findall(line)
+                for value in declaration.split(",")
+            }
+            for value in CODE_PATH_RE.findall(line):
+                if not plausible_code_path(value):
+                    continue
+                candidate = Path(value)
+                resolved = candidate if candidate.is_absolute() else root / candidate
+                if not resolved.exists() and value not in optional:
+                    broken.append(f"{name} -> {value}")
     if broken:
         for item in sorted(set(broken)):
             report.fail(f"脊柱/载体路径不存在：{item}")
@@ -146,10 +181,21 @@ def check_status_resurrection(root: Path, report: Report) -> None:
         report.warn("缺少 PROJECT_STATUS.md，跳过删除区检查")
         return
     text = status.read_text(encoding="utf-8")
-    match = re.search(r"删除区(?P<body>.*?)(?:\n## |\Z)", text, re.DOTALL)
     resurrected: list[str] = []
-    if match:
-        for value in CODE_PATH_RE.findall(match.group("body")):
+    depth: int | None = None
+    for line in text.splitlines():
+        heading = re.match(r"^(#{1,6})\s+(.+)", line)
+        if heading:
+            if heading.group(2).startswith("删除区"):
+                depth = len(heading.group(1))
+            elif depth is not None and len(heading.group(1)) <= depth:
+                depth = None
+            continue
+        if depth is None:
+            continue
+        # 模板的第一列是删除路径，后续列可能引用仍应存在的替代物。
+        value_column = line.strip().split("|")[1] if line.lstrip().startswith("|") else line
+        for value in CODE_PATH_RE.findall(value_column)[:1]:
             if plausible_code_path(value) and (root / value).exists():
                 resurrected.append(value)
     if resurrected:
@@ -159,27 +205,28 @@ def check_status_resurrection(root: Path, report: Report) -> None:
         report.ok("删除区无复活")
 
 
-def check_log(root: Path, report: Report, threshold: int) -> None:
+def check_log(root: Path, report: Report, threshold: int, base_ref: str | None) -> None:
     active_path = root / "PROJECT_LOG.md"
     archive_path = root / "PROJECT_LOG.archive.md"
     if not active_path.exists():
-        report.warn("缺少 PROJECT_LOG.md，跳过历史完整性检查")
-        return
+        report.warn("缺少 PROJECT_LOG.md，仍核对基准历史与现存归档")
 
-    active_text = active_path.read_text(encoding="utf-8")
+    active_text = active_path.read_text(encoding="utf-8") if active_path.exists() else ""
     archive_text = archive_path.read_text(encoding="utf-8") if archive_path.exists() else ""
     active_events = event_contents(active_text)
     current_events = set(active_events + event_contents(archive_text))
     previous_events: set[str] = set()
     for relative in ("PROJECT_LOG.md", "PROJECT_LOG.archive.md"):
-        previous = git_show(root, relative)
+        previous = git_show(root, relative, base_ref)
         if previous is not None:
             previous_events.update(event_contents(previous))
     missing = previous_events - current_events
     if missing:
         report.fail(f"PROJECT_LOG 历史有 {len(missing)} 条被删除或改写，且未原样进入归档")
-    else:
+    elif base_ref is not None:
         report.ok("PROJECT_LOG 活跃文件与归档合并后保持只追加")
+    else:
+        report.warn("无 Git 提交基准，历史只追加完整性未验证")
 
     if len(active_events) > threshold:
         report.warn(
@@ -221,7 +268,7 @@ def check_adr(root: Path, report: Report) -> None:
         report.fail("docs/adr/ 存在但缺少 README.md 统一索引")
         return
     index_text = index.read_text(encoding="utf-8")
-    for raw in MARKDOWN_LINK_RE.findall(index_text):
+    for raw in markdown_targets(index_text):
         target = normalize_link_target(raw)
         if target is not None and target.endswith(".md") and not resolve_target(root, index, target).exists():
             report.fail(f"ADR 索引链接不存在：docs/adr/README.md -> {target}")
@@ -259,8 +306,10 @@ def check_test_ids(root: Path, files: list[Path], report: Report) -> None:
             section in parts for section in ("templates", "skills", "commands", "agents", "references")
         ):
             continue
-        refs.update(value.upper() for value in TEST_ID_RE.findall(path.read_text(encoding="utf-8")))
-    refs.discard("TEST-ID")
+        text = path.read_text(encoding="utf-8")
+        if TEST_ID_EXAMPLE_MARKER in text:
+            continue
+        refs.update(value.upper() for value in TEST_ID_RE.findall(text))
     if not refs:
         report.ok("未发现跨文档 TEST-ID 引用")
         return
@@ -298,7 +347,7 @@ def check_orphans(root: Path, files: list[Path], report: Report) -> None:
         report.ok("docs/ 下未发现疑似孤儿文档")
 
 
-def check_spine(root: Path, report: Report, threshold: int) -> None:
+def check_spine(root: Path, report: Report, threshold: int, base_ref: str | None) -> None:
     report.section("spine · 脊柱")
     for name in SPINE:
         if (root / name).exists():
@@ -307,7 +356,7 @@ def check_spine(root: Path, report: Report, threshold: int) -> None:
             report.warn(f"{name} 缺失（渐进采用时可能合理）")
     check_spine_paths(root, report)
     check_status_resurrection(root, report)
-    check_log(root, report, threshold)
+    check_log(root, report, threshold, base_ref)
 
 
 def check_context(root: Path, report: Report) -> None:
@@ -332,6 +381,7 @@ def main() -> int:
     parser.add_argument("--root", type=Path, default=Path.cwd())
     parser.add_argument("--scope", choices=("spine", "context", "adr", "artifacts", "full"), default="full")
     parser.add_argument("--log-threshold", type=int, default=200)
+    parser.add_argument("--base-ref", help="日志历史比较基准；PR 传入基线提交，本地默认 HEAD")
     args = parser.parse_args()
 
     root = args.root.resolve()
@@ -340,7 +390,18 @@ def main() -> int:
         return 2
     report = Report()
     if args.scope in ("spine", "full"):
-        check_spine(root, report, args.log_threshold)
+        baseline = subprocess.run(
+            ["git", "rev-parse", "--verify", "--end-of-options", f"{args.base_ref or 'HEAD'}^{{commit}}"],
+            cwd=root, text=True, capture_output=True, check=False,
+        )
+        if baseline.returncode and args.base_ref is not None:
+            print(f"无法解析日志比较基准：{args.base_ref}", file=sys.stderr)
+            return 2
+        base_ref = baseline.stdout.strip() if baseline.returncode == 0 else None
+        try:
+            check_spine(root, report, args.log_threshold, base_ref)
+        except ValueError as exc:
+            report.fail(str(exc))
     if args.scope in ("context", "full"):
         check_context(root, report)
     if args.scope in ("adr", "full"):

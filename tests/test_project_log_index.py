@@ -41,6 +41,17 @@ class ProjectLogIndexTest(unittest.TestCase):
         self.assertIn("事件数：201", result.stdout)
         self.assertIn("超过阈值", result.stdout)
 
+    def test_noncanonical_event_format_fails_without_rewriting_history(self):
+        log = self.project / "PROJECT_LOG.md"
+        original = render_log(201).replace("## [", "[")
+        log.write_text(original, encoding="utf-8")
+        for action in ("status", "rebuild", "archive"):
+            result = self.run_script(action, "--yes")
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("日志事件格式错误", result.stderr)
+            self.assertEqual(log.read_text(encoding="utf-8"), original)
+        self.assertFalse((self.project / ".governance/project-log.sqlite").exists())
+
     def test_rebuild_is_idempotent_and_indexes_refs(self):
         (self.project / "PROJECT_LOG.md").write_text(render_log(3), encoding="utf-8")
         first = self.run_script("rebuild")

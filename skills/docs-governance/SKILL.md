@@ -1,10 +1,16 @@
 ---
 name: docs-governance
 description: >-
-  作为 docs-governance 插件的总入口，根据用户意图把任务路由到活文档、领域上下文与 ADR、变更影响、接口契约、测试资产、模块回归或闭环设计能力，并在大型变更中组织正确顺序。用于用户只说“文档治理”“项目治理”“帮我整理项目知识”“改完怎么收尾”而未指定具体 Skill，或需要跨多项治理能力时。English triggers: docs governance router, project knowledge governance, documentation workflow, governance workflow.
+  作为面向长期 AI 协作项目的知识、决策与验证治理总入口，把优秀 Agent 的一次性工作沉淀为可继承、可验证、可持续演进的项目集体能力；根据用户意图把任务路由到活文档、领域上下文与 ADR、变更影响、接口契约、测试资产、模块回归或闭环设计能力，并在大型变更中组织正确顺序。用于用户只说“文档治理”“项目治理”“帮我整理项目知识”“改完怎么收尾”而未指定具体 Skill，或需要跨多项治理能力时。English triggers: docs governance router, project knowledge governance, documentation workflow, governance workflow.
 ---
 
 # 文档治理总路由
+
+## 定位
+
+> **把优秀 Agent 的一次性工作，沉淀为项目可继承、可验证、可持续演进的集体能力。**
+
+本插件不是让 Agent 多写文档，而是治理长期 AI 协作中的项目知识、关键决策与验证证据：让后续 Agent 能恢复上下文、沿用已确认约束、复核结果，并把新的有效做法继续沉淀回项目。
 
 先判断意图，再读取并执行对应 Skill。不要在本路由复制各 Skill 的方法论。
 
@@ -13,6 +19,7 @@ description: >-
 | 用户意图 | 路由到 |
 |---|---|
 | 初始化、维护、阶段同步、LOG 管理或复盘 | `living-docs-governance` |
+| 当前 Module 权责、状态归属、依赖图或核心流转图 | `living-docs-governance` 的 `ARCHITECTURE.md` 路线 |
 | 领域术语、`CONTEXT.md`、架构或数据库决策、ADR | `context-and-decisions` |
 | 修改前判断牵连面、迁移、回滚、实施后对照 | `change-impact` |
 | 前后端或服务间接口 | `contract-first` |
@@ -34,6 +41,6 @@ description: >-
 
 ## 边界
 
-- 让 `CLAUDE_MAP.md` 管项目知识位置；本 Skill 只管插件能力路由。
+- 让 `CLAUDE_MAP.md` 管项目知识位置，让 `ARCHITECTURE.md` 管当前 Module 结构；本 Skill 只管插件能力路由。
 - 让 Spec/Issue 管业务成功标准，Issue Tracker 管任务状态和排期；不要复制进路由或数据库。
 - 不因为用户说“治理”就一次性创建所有可选文档和目录。先发现现有事实载体，再按预警信号懒创建。

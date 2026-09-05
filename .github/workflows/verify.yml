@@ -1,0 +1,33 @@
+name: Verify
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - name: Install development checks
+        run: python -m pip install -r requirements-dev.txt
+      - name: Run repository verification
+        env:
+          AUDIT_PR_BASE: ${{ github.event.pull_request.base.sha }}
+          AUDIT_PUSH_BEFORE: ${{ github.event.before }}
+        run: |
+          baseline="${AUDIT_PR_BASE:-$AUDIT_PUSH_BEFORE}"
+          if [[ -z "$baseline" || "$baseline" =~ ^0+$ ]]; then
+            baseline="$(git merge-base origin/main HEAD)"
+          fi
+          DOCS_GOVERNANCE_BASE_REF="$baseline" bash scripts/verify.sh
